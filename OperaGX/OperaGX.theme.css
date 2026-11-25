@@ -1,0 +1,12 @@
+/**
+ * @name OperaGX (NotVictorNW Fork)
+ * @author NotVictorNW (fork do tema original por Hawk/L-Ratio)
+ * @version 4.5.5
+ * @description Entrada no formato exigido pelo BetterDiscord (*.theme.css).
+ *   O CSS completo fica em OperaGX.css e é carregado por import remoto,
+ *   seguindo o padrao de distribuicao da documentacao do BetterDiscord.
+ * @source https://github.com/HawkRatio/OperaGXTheme
+ * @website https://github.com/notvictornw/Equicord-Themes
+ * @updateUrl https://raw.githubusercontent.com/notvictornw/Equicord-Themes/main/OperaGX/OperaGX.theme.css
+ */
+@import url("https://raw.githubusercontent.com/notvictornw/Equicord-Themes/main/OperaGX/OperaGX.css");

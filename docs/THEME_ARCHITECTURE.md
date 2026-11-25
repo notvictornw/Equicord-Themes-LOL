@@ -27,6 +27,7 @@ O tema **não define tamanho de ícone de servidor, gap, raio forçado nem `obje
 | Caminho | Papel |
 | --- | --- |
 | `OperaGX/OperaGX.css` | Tema ativo. Todo o comportamento vive aqui. |
+| `OperaGX/OperaGX.theme.css` | Entrada para BetterDiscord: único arquivo, meta JSDoc no início e `@import` remoto do CSS completo. |
 | `OperaGX/README.md` | Documentação curta para usuário final: instalação, opções, créditos. |
 | `FolderColumns/FolderColumns.css` | Tema antigo, **arquivado e descontinuado**. MIT. |
 | `FolderColumns/README.md` | Aviso de arquivamento e licença. |
@@ -65,6 +66,16 @@ Por isso o topo do arquivo é, nesta ordem:
 ```
 
 > **Erro histórico:** a base já foi importada sem `layer(base)`. CSS fora de camada sempre vence qualquer `@layer`. Isso fazia os overrides do fork perderem e o wallpaper base64 do upstream cobrir o app. Corrigido em v4.1.1.
+
+A documentação oficial do BetterDiscord (`https://docs.betterdiscord.app/themes/`) confirma o contrato e complementa o loader do Equicord:
+
+- um addon distribuído é **um único arquivo** e um tema precisa terminar em `.theme.css` com os campos `@name`, `@author`, `@description` e `@version` no começo absoluto do arquivo;
+- o padrão recomendado para distribuição remota é exatamente um arquivo pequeno com meta + `@import url(...)`, com o CSS real servido de outro endereço — é o que `OperaGX.theme.css` faz;
+- `:where()` tem especificidade zero, `[class*=]` sobrevive a mudança de hash mas custa mais que `[attr=valor]`, e duplicar um seletor ou usar um ancestral próximo é mais barato que espalhar `!important`;
+- `prefers-reduced-motion` deve ficar perto da regra original, e cores muito saturadas devem respeitar `--saturation-factor`, `--contrast` e `--brightness` do Discord;
+- `var()` inválido derruba a declaração inteira, então tokens configuráveis precisam de fallback ou dupla declaração quando usados em propriedades críticas.
+
+Por isso o fork evita `!important` fora da camada `base`, usa `#app-mount` como ancestral nas regras de maior frequência e mantém o wrapper `.theme.css` separado do CSS de implementação.
 
 ---
 
@@ -221,7 +232,7 @@ Decisões tomadas para evitar CLS (Cumulative Layout Shift) e jank:
 2. Use classes com **sufixos diferentes dos reais** para provar resiliência a hash; para o chat, os sufixos atuais observados são `.content_z_gUBg`, `.messageListItem_SY_P2T` e `.messageContent_2i8Bfm`. `.content_4TfzT5` é o divisor de "novo dia" (`width:20%`), não o container do chat.
 3. Abra a página no navegador.
 4. Meça `getBoundingClientRect()` e `getComputedStyle()` **antes e depois** de injetar o import.
-5. Compare: altura da linha de mensagem, posição do composer, largura da sidebar/barra, `contentVisibility` (`visible`) e `containIntrinsicSize` (`none`). Confira também `--font-primary`/`--cf` (stack nativa), `--customFont` (`"OperaGX Chakra"`), `fontFamily` de título/corpo, `fontWeight` de `.messageContent_*` (`400`) e `document.fonts`: `0` faces com `display:"swap"` e `status:"loaded"`.
+5. Compare: altura da linha de mensagem, posição do composer, largura da sidebar/barra, `contentVisibility` (`visible`) e `containIntrinsicSize` (`none`). Confira também `--font-primary`/`--cf` (stack nativa), `--customFont` (`"OperaGX Chakra"`), `fontFamily` de título/corpo, `fontWeight` de `.messageContent_*` (`400`) e `document.fonts`: `0` faces com `display:"swap"` e `status:"loaded"`. Em `[class*="card_"]`/`[class*="guildIcon"]`, confirme que `borderRadius`, `margin`, `padding` e `objectFit` **não são declarados pelo fork** — só `clipPath: none` e `--cp-size: 0px` devem vir dele.
 6. Confira o console do navegador em nível de erro.
 7. Apague a página temporária e feche a aba antes de commitar.
 8. Rode `git diff --check` e contagem de chaves (`{` vs `}`).
@@ -229,6 +240,8 @@ Decisões tomadas para evitar CLS (Cumulative Layout Shift) e jank:
 Verificação v4.5.4.2: harness com o import do tema em `<style id="vencord-themes">`, comparando `HEAD` (v4.5.4.1) contra a versão atual. Geometria idêntica nos dois: título `y=82.4375`, `h=42`; mensagem `y=145.875`, `h=18`; wrapper da mensagem `y=145.875`, `h=18`; nav/sidebar/grupo inalterados. Diferença funcional: `--font-primary`, `--font-display` e `--cf` passaram de `"Chakra Petch"` para a stack nativa; `--customFont` passou para `"OperaGX Chakra"`; `0` faces `swap` carregadas contra `2` antes; `zoom` calculado continua `1` sem declaração no tema. Medição anterior (v4.5.4.1): mensagem 20px→20px, composer y 104→105, sidebar 240→240, mount 841→841.
 
 Última verificação (v4.5.4.3): mesmo harness, agora comparando `HEAD` (v4.5.4.2) contra a versão atual, com `<strong>` dentro de `.messageContent_*`. `fontWeight` da mensagem caiu de `500` para `400`; `<strong>` permanece `600` com `textShadow: none`. Geometria idêntica: título `y=82.4375`, `h=42`; mensagem e wrapper `y=145.875`, `h=18`; nav `x=8`, `y=8`, `w=1264`, `h=18`. `document.fonts`: `22` faces Chakra no total, `16` `swap`/`0` carregadas, `6` `optional`/`1` carregada nos dois estados — a correção não trouxe nenhuma face nova.
+
+Verificação v4.5.5: com o mesmo harness, o card e o ícone de servidor tinham `borderRadius: 12px`, `margin: 0px` e `padding: 0px` **injetados pelo fork**. Depois da remoção das regras, `clipPath` continua `none` e `--cp-size` continua `0px`, mas `borderRadius`/`margin`/`padding`/`objectFit` não recebem mais valor do tema — no harness (sem CSS do Discord) aparecem os defaults do navegador, e em produção quem decide é o CSS nativo do Discord. `--font-primary` segue na stack nativa, `--customFont` em `"OperaGX Chakra"` e `fontWeight` da mensagem em `400`.
 
 ---
 
@@ -299,6 +312,7 @@ Ideias ordenadas por valor, sem obrigatoriedade:
 | 4.5.4.1 | `display=optional`, sem reserva 72px, `box-sizing` em nav/sidebar. |
 | 4.5.4.2 | Variáveis de fonte globais neutralizadas, família de título própria (`"OperaGX Chakra"`) sem faces `swap`, densidade nativa preservada e `zoom` forçado removido. |
 | 4.5.4.3 | Peso 400 no texto das mensagens e `text-shadow` removido do `<strong>`, seguindo o padrão do tema Ultra (BetterDiscord). |
+| 4.5.5 | Nenhuma geometria de ícone de servidor forçada pelo fork; entry `OperaGX.theme.css` no formato documentado do BetterDiscord. |
 
 ---
 

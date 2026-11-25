@@ -1,8 +1,9 @@
 /**
  * @name OperaGX (NotVictorNW Fork)
  * @author NotVictorNW (fork do tema original por Hawk/L-Ratio)
- * @version 4.5.4.3
+ * @version 4.5.5
  * @description Fork modificado, otimizado e melhorado do tema OperaGX original por Hawk/L-Ratio.
+ *   v4.5.5 — Geometria nativa dos icones de servidor restaurada; entry *.theme.css para BetterDiscord.
  *   v4.5.4.3 — Texto de mensagem com peso nativo 400; correcao de fonte e spacing mantidas.
  *   v4.5.4.2 — Variaveis de fonte do upstream neutralizadas; titulos sem faces swap e sem zoom forçado.
  *   v4.5.4.1 — Sem FOUT e sem reserva 72px em mensagens; larguras nativas preservadas.
@@ -161,17 +162,16 @@
   nav[class*="guilds_"] {
     box-sizing: border-box !important;
   }
-  nav[class*="guilds_"],
-  nav[class*="guilds_"] * {
+  nav[class*="guilds_"] [class*="card_"],
+  nav[class*="guilds_"] [class*="guildIcon"],
+  nav[class*="guilds_"] [class*="iconWrapper"],
+  nav[class*="guilds_"] [class*="tree_"] {
     --cp-size: 0px !important;
   }
   nav[class*="guilds_"] [class*="card_"],
   nav[class*="guilds_"] [class*="loaded_"],
   nav[class*="guilds_"] [class*="guildIcon"] {
     clip-path: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border-radius: var(--radius-md) !important;
   }
   nav[class*="guilds_"] [class*="tree_"] {
     -webkit-mask: none !important;
@@ -420,10 +420,6 @@
   --radius-xxl:    24px;
   --radius-round:  999px;
 
-  /* — Upstream consome --guild-icon-hover/selected e não define; radius nativo */
-  --guild-icon-hover-radius:   16px;
-  --guild-icon-selected-radius:16px;
-
   /* — Highlight de mensagem */
   --gx-highlight-color:        250,30,70;
   --gx-highlight-width:        2px;
@@ -589,18 +585,10 @@ html #app-mount::after {
   }
 
   /* ——————————————————————————————————————————
-     ICONES DE SERVIDOR
+     ICONES DE SERVIDOR — 100% nativos
+     Nenhum raio, width, gap, padding ou object-fit é forçado.
+     O fork só desliga o clip-path do upstream em @layer base.
      —————————————————————————————————————————— */
-  [class*="guildIcon_"] img,
-  [class*="iconWrapper_"] img {
-    border-radius: var(--radius-md) !important;
-    transform: translateZ(0);
-    transition: border-radius var(--gx-transition-fast);
-  }
-  [class*="guildIcon_"]:hover img,
-  [class*="iconWrapper_"]:hover img {
-    border-radius: var(--radius-lg) !important;
-  }
 
   /* ——————————————————————————————————————————
      CODE BLOCKS
