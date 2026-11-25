@@ -1,0 +1,1328 @@
+/**
+ * @name OperaGX (NotVictorNW Fork)
+ * @author NotVictorNW (fork do tema original por Hawk/L-Ratio)
+ * @version 4.5.4.1
+ * @description Fork modificado, otimizado e melhorado do tema OperaGX original por Hawk/L-Ratio.
+ *   v4.5.4.1 — Sem FOUT e sem reserva 72px em mensagens; larguras nativas preservadas.
+ *   v4.5.4 — Salto de layout eliminado: spacing do upstream zerado e fonte base nativa.
+ *   v4.5.3 — Tamanhos nativos do Discord restaurados; zoom/tipografia extras removidos.
+ *   v4.5.2 — Seletores por prefixo: barra 72px, ícones inteiros e sidebar redimensionável.
+ *   v4.5.1 — Barra de servidores 72px, ícones sem fade/clip e gap compacto (correção local).
+ *   v4.5 — Densidade compacta: seletor real de servidor/call, highlight e scanlines suaves.
+ *   v4.4 — Ícones de servidor/call, highlight e scanlines refinados; botões totalmente arredondados.
+ *   v4.3 — Correções de UI/UX: raios e bordas restaurados, hovers sem salto, overlays sem clip.
+ *   v4.2 — FolderColumns nativo removido; colunas ficam a cargo de plugins dedicados.
+ *   v4.1.2 — Wallpaper do upstream neutralizado; scanlines movidas de ::before para ::after.
+ *   v4.1.1 — Base importada em @layer base: overrides do fork voltam a ganhar do upstream.
+ *   v4.1 — Base sincronizada com HawkRatio/OperaGXTheme v1.2 (CDN ativo + nomes de classe 11/2026).
+ *   Paleta vermelha GX, Chakra Petch, scanlines, glow e HUD preservados.
+ *   v4.0 — Reescrita completa com melhorias premium otimizadas para PCs fracos:
+ *   · Scanlines leves via ::after em camada única (opacity-only, GPU)
+ *   · Glitch hover no nome do servidor (clip-path keyframe, leve)
+ *   · Micro-borda accent nas mensagens (HUD feel)
+ *   · Sidebar HUD redesenhada (corner-cut, uppercase, linha accent)
+ *   · Loading bar animada (transform: scaleX apenas — GPU)
+ *   · Chakra Petch 400/600/700 para titulos em negrito
+ *   · Novas @var: glow intensity, scanline opacity, accent color
+ *   · Todos seletores atualizados para [class*=] (hash-resiliente)
+ *   · Todas animações GPU-composited (transform/opacity/filter only)
+ * @source https://github.com/HawkRatio/OperaGXTheme
+ * @website https://github.com/notvictornw/Equicord-Themes
+ * @invite RrXeKaVZsm
+ * @updateUrl https://raw.githubusercontent.com/notvictornw/Equicord-Themes/main/OperaGX/OperaGX.css
+ *
+ * @var range   gx_glow_intensity_s      "Glow intensity (0=off, 100=full) [default] = 55"                             [55, 0, 100, 1]
+ * @var range   gx_scanline_opacity_s    "Scanlines opacity (0=off, 20=max) [default] = 4"                             [4, 0, 20, 1]
+ */
+
+/* ============================================================
+   IMPORTS: Chakra Petch 400/600/700 para titulos.
+   font-display:swap previne FOIT; synthesis:none evita reflow.
+   Base do tema via CDN oficial HawkRatio v1.2 (nomes de classe 11/2026),
+   dentro de @layer base — CSS fora de layer sempre vence, por isso a base
+   nao pode ficar unlayered ou atropela os overrides do fork.
+   Nao inlinear (99% e base64). CDN antigo L-Ratio esta offline (404).
+   ============================================================ */
+@import url(https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=optional);
+@import url(https://hawkratio.github.io/OperaGXTheme/release/main.css) layer(base);
+
+/* ============================================================
+   @layer cascade: base < opengx < overrides < states < a11y
+   Evita !important desnecessario e da previsibilidade total.
+   ============================================================ */
+@layer base, opengx, overrides, states, a11y;
+
+/* ============================================================
+   BASE OVERRIDES — o upstream força radius:0 !important em
+   .theme-dark/.theme-light. Declarar dentro de @layer base,
+   depois do import e com a mesma especificidade, é a única
+   forma de ganhar: important em camada posterior não vence
+   important da camada anterior.
+   ============================================================ */
+@layer base {
+  .theme-light,
+  .theme-dark,
+  .theme-darker,
+  .theme-midnight {
+    --radius-none:   0px !important;
+    --radius-xs:     4px !important;
+    --radius-sm:     8px !important;
+    --radius-md:     12px !important;
+    --radius-lg:     16px !important;
+    --radius-xl:     20px !important;
+    --radius-xxl:    24px !important;
+    --radius-round:  999px !important;
+  }
+
+  [class*="userPopoutOuter_"],
+  [class*="userProfileModalOuter_"],
+  [class*="menu_"],
+  [class*="submenu_"],
+  [class*="contextMenu_"],
+  [class*="tooltip_"] {
+    border-radius: 12px !important;
+  }
+  [class*="headerPadding_"],
+  [class*="banner_"] {
+    border-radius: 12px 12px 0 0 !important;
+  }
+
+  /* Canais: o upstream aplica clip-path de canto cortado.
+     Sem isso o pill do fork nunca aparece. */
+  [class*="interactive_"],
+  [class*="modeSelected_"] [class*="link_"] {
+    clip-path: none !important;
+    border-radius: 12px !important;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 999px !important;
+    border: 2px solid transparent !important;
+    background-clip: padding-box !important;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    border-radius: 999px !important;
+  }
+
+  /* Barra de servidores: só remove o que o upstream quebra.
+     Tamanho, espaçamento e imagem ficam com o padrão nativo do Discord. */
+  nav[class*="guilds_"] {
+    box-sizing: border-box !important;
+  }
+  nav[class*="guilds_"],
+  nav[class*="guilds_"] * {
+    --cp-size: 0px !important;
+  }
+  nav[class*="guilds_"] [class*="card_"],
+  nav[class*="guilds_"] [class*="loaded_"],
+  nav[class*="guilds_"] [class*="guildIcon"] {
+    clip-path: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: var(--radius-md) !important;
+  }
+  nav[class*="guilds_"] [class*="tree_"] {
+    -webkit-mask: none !important;
+    mask: none !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    -webkit-mask-size: auto !important;
+    mask-size: auto !important;
+  }
+
+  /* Sidebar de canais: volta a ser redimensionável pelo Discord.
+     Nada de min/max travado nem contain: paint. */
+  [class*="sidebar_"],
+  [class*="sidebarContainer_"] {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    contain: none !important;
+    pointer-events: auto !important;
+  }
+  [class*="resizeHandle"],
+  [class*="resizer"],
+  #app-mount [role="separator"][aria-orientation="vertical"] {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    touch-action: none !important;
+    user-select: none !important;
+    width: 6px !important;
+    min-width: 6px !important;
+    cursor: col-resize !important;
+    z-index: 5 !important;
+    border-radius: var(--radius-round) !important;
+    background: rgba(var(--accent-color-1), 0.25) !important;
+  }
+
+  /* Reset duro de zoom residual: tema/loader não pode escalar o app. */
+  html,
+  html body,
+  html body #app-mount {
+    zoom: 1 !important;
+  }
+
+  /* CAUSA DO SALTO: o upstream coloca padding-top:8px + margin-top:8px
+     em CADA container de canal/membro, além de margin-left:6px e border-top.
+     Isso empurra a sidebar e as mensagens para baixo. Zerar por prefixo
+     devolve o spacing nativo do Discord sem depender de hash. */
+  #app-mount :where(
+    [class*="containerDefault"],
+    [class*="containerDragAfter"],
+    [class*="containerDragBefore"],
+    [class*="containerUserOver"],
+    [class*="membersGroup"],
+    [class*="privateChannelsHeaderContainer"]
+  ) {
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    border-top: 0 !important;
+  }
+  :root {
+    --categorySize: 12px;
+  }
+  body {
+    font-family: "gg sans", "Noto Sans", Helvetica, Arial, sans-serif !important;
+  }
+
+  /* Chamada: tamanho Discord (32px), avatar redondo e botões sem clip-path. */
+  [class*="callContainer"] {
+    border-radius: 16px !important;
+    clip-path: none !important;
+    padding: 4px !important;
+    margin: 4px !important;
+  }
+  [class*="callContainer"] [class*="participant"] {
+    border-radius: 12px !important;
+    clip-path: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-height: 36px !important;
+  }
+  [class*="callContainer"] [class*="avatar"] {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    clip-path: none !important;
+  }
+  [class*="callContainer"] [class*="avatar"] img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+  }
+  [class*="callContainer"] [class*="button"] {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    border-radius: 10px !important;
+    clip-path: none !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  /* Highlight de mensagem: dentro do balão, nunca fora dele. */
+  [class*="messageListItem_"] [class*="content_"],
+  [class*="messageListItem_"] [class*="messageContent_"],
+  [class*="messageListItem_"] [class*="message_"] {
+    background-image: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: var(--radius-md) !important;
+    transition: background-color var(--gx-transition-fast) !important;
+  }
+  [class*="messageListItem_"]:hover [class*="content_"],
+  [class*="messageListItem_"]:hover [class*="messageContent_"] {
+    background-color: rgba(var(--gx-highlight-color), 0.06) !important;
+  }
+  [class*="messageListItem_"][class*="selected_"] [class*="content_"],
+  [class*="messageListItem_"][class*="selected_"] [class*="messageContent_"],
+  [class*="messageListItem_"]:focus-within [class*="content_"],
+  [class*="messageListItem_"]:focus-within [class*="messageContent_"] {
+    background-color: rgba(var(--gx-highlight-color), 0.12) !important;
+    box-shadow: inset var(--gx-highlight-width) 0 0 rgba(var(--gx-highlight-color), 0.85) !important;
+  }
+
+  /* Botões de câmera/transmissão/config e afins: sem clip-path, sempre redondos. */
+  [class*="button_"],
+  [class*="iconButton_"],
+  [class*="radioGroup_"] [role="radio"],
+  [class*="channelTextArea_"] [class*="button_"],
+  [class*="toolbox_"] [class*="button_"] {
+    clip-path: none !important;
+    border-radius: 12px !important;
+  }
+  [class*="toolbar_"] [class*="button_"],
+  [class*="panel_"] [class*="button_"],
+  [class*="settings_"] [class*="button_"] {
+    border-radius: 10px !important;
+    clip-path: none !important;
+  }
+  [class*="radioGroup_"] [role="radio"][aria-checked="true"],
+  [class*="button_"][aria-pressed="true"] {
+    border-radius: 12px !important;
+    box-shadow: inset 0 0 0 1px rgba(var(--accent-color-1), 0.55) !important;
+  }
+  [class*="popout_"],
+  [class*="tooltip_"] {
+    clip-path: none !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* ============================================================
+   :root — Design tokens + variaveis configuráveis
+   Todas as cores em formato RGB (r,g,b) para rgba() inline.
+   ============================================================ */
+:root {
+  /* — Background */
+  --background:                     rgb(var(--darker-background-color));
+  --background-behind-appmount:     rgb(var(--darker-background-color));
+  --background-accent-color-1:      var(--accent-color-1);
+
+  /* — Accent (RGB) */
+  --accent-color-1:                 250,30,70;
+  --accent-color-2:                 255,55,109;
+  --dark-background-color:          18,16,25;
+  --darker-background-color:        8,5,14;
+  --border-brightness:              0.35;
+
+  /* — Status colors (GX palette) */
+  --gx-red:                         255,34,34;
+  --gx-red-2:                       255,66,66;
+  --gx-yellow:                      234,234,34;
+  --gx-yellow-2:                    255,255,68;
+  --gx-green:                       0,212,81;
+  --gx-green-2:                     0,255,129;
+
+  /* — Typography colors */
+  --fullwhite-font:                 220,222,225;
+  --normal-font:                    188,190,194;
+  --normal-hover-font:              222,224,227;
+  --muted-font:                     108,112,120;
+  --link-text:                      0,176,244;
+  --font-in-accent:                 0,0,0;
+
+  /* — Font family */
+  --customFont:                     "Chakra Petch";
+  --codeBlocksCustomFont:           "Chakra Petch";
+  --category-name-transform:        unset;
+  font-synthesis:                   none;
+
+  /* — Backgrounds (sem backdrop-filter para performance) */
+  --wintitlebar-background-blur:    none;
+  --wintitlebar-transparency:       0.7;
+  --wintitlebar-transparency-color: var(--dark-background-color);
+  --wintb-focused-alpha:            1;
+  --wintb-focused-color:            var(--darker-background-color);
+  --header-background-blur:         none;
+  --header-transparency:            0.5;
+  --header-transparency-color:      var(--dark-background-color);
+  --serverlist-background-blur:     none;
+  --serverlist-transparency:        0.5;
+  --serverlist-transparency-color:  var(--dark-background-color);
+  --channels-background-blur:       none;
+  --channels-transparency:          0.5;
+  --channels-transparency-color:    var(--dark-background-color);
+  --chat-background-blur:           none;
+  --chat-transparency:              0.5;
+  --chat-transparency-color:        var(--dark-background-color);
+  --memberlist-background-blur:     none;
+  --memberlist-transparency:        0.5;
+  --memberlist-transparency-color:  var(--dark-background-color);
+
+  /* — Element transparency */
+  --chatbox-transparency:           1;
+  --chatbox-focused-transparency:   1;
+  --other-transparency:             1;
+  --other-highlighted-transparency: 1;
+
+  /* — Radius tokens */
+  --radius-none:   0px;
+  --radius-xs:     4px;
+  --radius-sm:     8px;
+  --radius-md:     12px;
+  --radius-lg:     16px;
+  --radius-xl:     20px;
+  --radius-xxl:    24px;
+  --radius-round:  999px;
+
+  /* — Upstream consome --guild-icon-hover/selected e não define; radius nativo */
+  --guild-icon-hover-radius:   16px;
+  --guild-icon-selected-radius:16px;
+
+  /* — Highlight de mensagem */
+  --gx-highlight-color:        250,30,70;
+  --gx-highlight-width:        2px;
+
+  /* — Glow intensity: escala de 0-100 via @var.
+       Multiplicado em calc() sem adicionar animacoes. */
+  --gx-glow-int:        calc(var(--gx_glow_intensity_s, 55) / 100);
+
+  /* — Transitions: propriedades GPU-composited apenas */
+  --gx-transition:      180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gx-transition-fast: 120ms ease;
+
+  /* — Glow tokens (drop-shadow = composited; box-shadow = nao) */
+  --gx-shadow-box: 0 0 6px rgba(var(--accent-color-1), calc(0.18 * var(--gx-glow-int) * 2));
+
+  /* — Scanlines discretas, inspiradas no Opera GX real */
+  --gx-scanline-opacity: calc(var(--gx_scanline_opacity_s, 4) / 100);
+  --gx-scanline-scale: 3px;
+}
+
+
+/* ============================================================
+   SCANLINES — overlay CRT leve no #app-mount.
+   Usa ::after porque o upstream usa ::before para o wallpaper.
+   fixed = nao repinta em scroll. pointer-events:none = zero
+   interacao. Desativadas em prefers-reduced-motion (a11y).
+   ============================================================ */
+html #app-mount::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent calc(var(--gx-scanline-scale) - 1px),
+    rgba(var(--accent-color-1), calc(var(--gx-scanline-opacity) * 0.6))
+      calc(var(--gx-scanline-scale) - 1px),
+    rgba(var(--accent-color-1), calc(var(--gx-scanline-opacity) * 0.6))
+      var(--gx-scanline-scale)
+  );
+  mix-blend-mode: normal;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 80px, #000 calc(100% - 80px), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 80px, #000 calc(100% - 80px), transparent);
+}
+
+
+/* ============================================================
+   KEYFRAMES — todas GPU-composited
+   ============================================================ */
+
+/* Loading bar: scaleX apenas (composited) */
+@keyframes gx-loadbar {
+  0%   { transform: scaleX(0); opacity: 0.8; }
+  60%  { transform: scaleX(0.85); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+/* Call ring: filter:drop-shadow (composited) */
+@keyframes gx-call-ring {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255,34,34,0.5)); }
+  50%       { filter: drop-shadow(0 0 12px rgba(255,34,34,0.95)); }
+}
+
+
+/* ============================================================
+   LAYER overrides
+   ============================================================ */
+@layer overrides {
+
+  /* ——————————————————————————————————————————
+     BOTOES — rounding + hover/active
+     —————————————————————————————————————————— */
+  [class*="button_"],
+  .lookFilled,
+  .lookOutlined,
+  button[role="button"] {
+    border-radius: var(--radius-md);
+    clip-path: none;
+    transition: transform var(--gx-transition-fast), filter var(--gx-transition);
+  }
+  [class*="button_"]:hover,
+  .lookFilled:hover,
+  .lookOutlined:hover,
+  button[role="button"]:hover {
+    border-radius: var(--radius-md);
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+  }
+  [class*="button_"]:active,
+  .lookFilled:active,
+  .lookOutlined:active,
+  button[role="button"]:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  /* ——————————————————————————————————————————
+     SWITCHES + CHECKBOXES
+     —————————————————————————————————————————— */
+  div[role="switch"],
+  [class*="switch_"],
+  [class*="checkboxInner"] {
+    border-radius: var(--radius-round);
+  }
+  .checkbox,
+  [class*="checkbox_"] {
+    border-radius: var(--radius-sm);
+  }
+
+  /* ——————————————————————————————————————————
+     CARDS / EMBEDS / MODAIS / POPOUTS
+     —————————————————————————————————————————— */
+  [class*="embedWrapper"],
+  [class*="modal_"],
+  [class*="popout_"],
+  [class*="tooltipInner_"],
+  [class*="menu_"] {
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(var(--accent-color-1), 0.35);
+  }
+  [class*="embedWrapper"] {
+    border-left: 3px solid var(--embed-color, rgba(var(--accent-color-1), 0.7));
+  }
+
+  /* ——————————————————————————————————————————
+     INPUTS + CHAT BOX
+     —————————————————————————————————————————— */
+  [class*="channelTextArea"],
+  [class*="markup"],
+  [class*="input_"],
+  input[type="text"],
+  input[type="password"],
+  textarea {
+    border-radius: var(--radius-md);
+  }
+  [class*="channelTextArea"]:focus-within,
+  [class*="markup"]:focus,
+  input:focus-visible,
+  textarea:focus-visible {
+    border-radius: var(--radius-lg);
+    box-shadow: 0 0 0 1px rgba(var(--accent-color-1), 0.5), var(--gx-shadow-box);
+  }
+
+  /* ——————————————————————————————————————————
+     AVATARES — redondos, translateZ(0) = GPU layer
+     —————————————————————————————————————————— */
+  img[class*="Avatar"],
+  [class*="avatar_"] img,
+  [class*="clickableAvatar_"] img,
+  [class*="wrapperAvatar_"] img,
+  [class*="listAvatar_"] img,
+  [class*="replyAvatar_"] img,
+  [class*="messageAvatar_"] img {
+    border-radius: var(--radius-round) !important;
+    transform: translateZ(0);
+    transition: transform var(--gx-transition-fast), filter var(--gx-transition);
+  }
+  [class*="clickableAvatar_"]:hover img,
+  [class*="listAvatar_"]:hover img,
+  [class*="member_"]:hover [class*="avatar_"] img {
+    filter: drop-shadow(0 0 6px rgba(var(--accent-color-1), calc(0.4 * var(--gx-glow-int) * 2)));
+  }
+
+  /* ——————————————————————————————————————————
+     ICONES DE SERVIDOR
+     —————————————————————————————————————————— */
+  [class*="guildIcon_"] img,
+  [class*="iconWrapper_"] img {
+    border-radius: var(--radius-md) !important;
+    transform: translateZ(0);
+    transition: border-radius var(--gx-transition-fast);
+  }
+  [class*="guildIcon_"]:hover img,
+  [class*="iconWrapper_"]:hover img {
+    border-radius: var(--radius-lg) !important;
+  }
+
+  /* ——————————————————————————————————————————
+     CODE BLOCKS
+     —————————————————————————————————————————— */
+  code,
+  pre,
+  [class*="code_"] {
+    border-radius: var(--radius-sm);
+    font-family: var(--codeBlocksCustomFont), monospace;
+  }
+
+  /* ——————————————————————————————————————————
+     MENTIONS — pill animada (scale = GPU)
+     —————————————————————————————————————————— */
+  .mention,
+  [class*="mention"] {
+    border-radius: var(--radius-xs);
+    transform: translateZ(0);
+    transition: transform var(--gx-transition-fast), background var(--gx-transition), color var(--gx-transition);
+  }
+  .mention:hover,
+  [class*="mention"]:hover {
+    transform: scale(1.05);
+  }
+  .mention:active,
+  [class*="mention"]:active {
+    transform: scale(0.98);
+  }
+
+  /* ——————————————————————————————————————————
+     LINKS — drop-shadow composited no hover
+     —————————————————————————————————————————— */
+  a,
+  [class*="anchor_"] {
+    transition: color var(--gx-transition);
+  }
+  a:hover,
+  [class*="anchor_"]:hover {
+    filter: drop-shadow(0 0 6px rgba(var(--accent-color-1), calc(0.5 * var(--gx-glow-int) * 2)));
+  }
+
+  /* ——————————————————————————————————————————
+     MENSAGENS — hover accent esquerda + micro-borda HUD
+     —————————————————————————————————————————— */
+  li[class*="messageListItem_"]:hover,
+  [class*="messageListItem_"]:hover {
+    box-shadow: inset 2px 0 0 rgba(var(--accent-color-1), 0.65);
+  }
+
+  /* Micro-borda inferior: textura HUD muito sutil */
+  [class*="message_"]:not([class*="messageListItem_"]) {
+    border-bottom: 1px solid rgba(var(--accent-color-1), 0.06);
+  }
+
+  /* ——————————————————————————————————————————
+     SELECAO DE TEXTO
+     —————————————————————————————————————————— */
+  ::selection {
+    background: rgba(var(--accent-color-1), 0.35);
+    color: rgb(var(--fullwhite-font));
+  }
+
+  /* ——————————————————————————————————————————
+     TIPOGRAFIA — Chakra Petch 600/700 em titulos
+     —————————————————————————————————————————— */
+  [class*="title_"],
+  [class*="headerText_"],
+  [class*="channelName_"],
+  [class*="guildName_"],
+  [class*="sectionTitle_"],
+  h1, h2, h3 {
+    font-family: var(--customFont), sans-serif;
+  }
+
+  /* Categorias de canal: mantêm o uppercase, mas sem tracking extra
+     (isso fazia o texto ocupar mais largura e parecer zoom). */
+  [class*="categoryTitle_"],
+  [class*="categoryHeader_"],
+  [class*="category_"] > [class*="name_"] {
+    font-family: var(--customFont), sans-serif;
+    text-transform: uppercase;
+    color: rgb(var(--accent-color-2));
+  }
+
+  /* ——————————————————————————————————————————
+     SIDEBAR HUD REDESIGN
+     Canal selecionado: pill + borda accent esquerda
+     Canal hover: borda accent sutil + nome claro
+     —————————————————————————————————————————— */
+  [class*="modeSelected_"][class*="containerDefault_"],
+  [class*="containerDefault_"][class*="selected_"] {
+    background: rgba(var(--accent-color-1), 0.14) !important;
+    border-radius: var(--radius-md);
+    border-left: 2px solid rgba(var(--accent-color-1), 0.7);
+  }
+  [class*="modeSelected_"] [class*="layout_"] {
+    border-radius: var(--radius-md);
+  }
+
+  [class*="containerDefault_"]:hover {
+    border-left: 2px solid rgba(var(--accent-color-1), 0.35);
+    transition: border-color var(--gx-transition);
+  }
+  [class*="modeSelected_"][class*="containerDefault_"]:hover,
+  [class*="containerDefault_"][class*="selected_"]:hover {
+    border-left-color: rgba(var(--accent-color-1), 0.7);
+  }
+  [class*="containerDefault_"]:hover [class*="channelName_"],
+  [class*="containerDefault_"]:hover [class*="name_"] {
+    color: rgb(var(--normal-hover-font));
+  }
+
+  /* Group headers Online/Offline */
+  [class*="membersGroup_"] {
+    text-transform: uppercase;
+    color: rgb(var(--accent-color-2));
+    font-family: var(--customFont), sans-serif;
+  }
+
+  /* Canal unread: glow no icone */
+  [class*="containerDefault_"][class*="unread_"] [class*="icon_"],
+  [class*="modeUnread_"] [class*="icon_"] {
+    filter: drop-shadow(0 0 4px rgba(var(--accent-color-1), 0.6));
+  }
+
+  /* Canal mencionado: text-shadow */
+  [class*="mentioned_"] [class*="channelName_"],
+  [class*="modeSelected_"] [class*="channelName_"] {
+    text-shadow: 0 0 6px rgba(var(--accent-color-1), 0.55);
+  }
+
+  /* Category header: linha tracejada no hover (absoluta — nao empurra canais) */
+  [class*="categoryTitle_"],
+  [class*="containerDefault_"] > [class*="categoryName_"] {
+    position: relative;
+  }
+  [class*="categoryTitle_"]:hover::after,
+  [class*="containerDefault_"] > [class*="categoryName_"]:hover::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 0;
+    border-top: 1px dashed rgba(var(--accent-color-1), 0.5);
+    width: 100%;
+  }
+
+  /* ——————————————————————————————————————————
+     LOADING BAR — scaleX apenas (GPU composited)
+     —————————————————————————————————————————— */
+  [class*="bar_"][class*="loading_"],
+  [class*="progress_"][class*="bar_"],
+  [class*="loadingBar_"] {
+    background: linear-gradient(90deg,
+      rgba(var(--accent-color-1), 0.9),
+      rgba(var(--accent-color-2), 0.9)
+    ) !important;
+    border-radius: var(--radius-round);
+    transform-origin: left center;
+    animation: gx-loadbar 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* ——————————————————————————————————————————
+     GLITCH — hover no nome do servidor.
+     ::after com clip-path keyframe (composited).
+     —————————————————————————————————————————— */
+  [class*="guildName_"],
+  [class*="serverName_"] {
+    position: relative;
+  }
+  [class*="guildName_"]::after,
+  [class*="serverName_"]::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    color: rgba(var(--accent-color-2), 0.85);
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+    pointer-events: none;
+  }
+  [class*="guildName_"]:hover::after,
+  [class*="serverName_"]:hover::after {
+    opacity: 1;
+  }
+
+  /* ——————————————————————————————————————————
+     SEPARADOR DMs/Servers na barra principal
+     Linha gradient accent
+     —————————————————————————————————————————— */
+  [class*="guildSeparator_"] {
+    display: block !important;
+    width: 70% !important;
+    height: 1px !important;
+    margin: 6px auto !important;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(var(--accent-color-1), 0.45),
+      transparent
+    ) !important;
+    border: 0 !important;
+    opacity: 0.8;
+  }
+
+  /* ——————————————————————————————————————————
+     PROFILE POPOUT + MODAL
+     —————————————————————————————————————————— */
+  [class*="userPopoutOuter_"],
+  [class*="userProfileModalOuter_"] {
+    border: 1px solid rgba(var(--accent-color-1), 0.6) !important;
+    border-radius: var(--radius-lg) !important;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45) !important;
+  }
+  [class*="userProfileInnerThemedNonPremium_"],
+  [class*="userProfileInnerThemedPremium_"] {
+    border-radius: var(--radius-md) !important;
+  }
+  [class*="userPopoutOuter_"] [class*="headerPadding_"],
+  [class*="userProfileModalOuter_"] [class*="headerPadding_"] {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  }
+  [class*="userPopoutOuter_"] [class*="banner_"],
+  [class*="userProfileModalOuter_"] [class*="banner_"] {
+    position: relative;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  }
+
+  /* Banner: overlay gradient accent no topo */
+  [class*="userPopoutOuter_"] [class*="banner_"]::before,
+  [class*="userProfileModalOuter_"] [class*="banner_"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    height: 60%;
+    background: linear-gradient(180deg,
+      rgba(var(--accent-color-1), 0.35),
+      transparent
+    );
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Avatar no popout */
+  [class*="userPopoutOuter_"] [class*="avatarWrapper_"] img,
+  [class*="userProfileModalOuter_"] [class*="avatarWrapper_"] img {
+    border-radius: var(--radius-round) !important;
+    border: 2px solid rgba(var(--accent-color-1), 0.8);
+    box-shadow: 0 0 6px rgba(var(--accent-color-1), 0.35), 0 2px 6px rgba(0,0,0,0.4);
+    transform: translateZ(0);
+    transition: border-color var(--gx-transition), filter var(--gx-transition);
+  }
+  [class*="userPopoutOuter_"] [class*="avatarWrapper_"]:hover img,
+  [class*="userProfileModalOuter_"] [class*="avatarWrapper_"]:hover img {
+    border-color: rgba(var(--accent-color-1), 1);
+    filter: drop-shadow(0 0 8px rgba(var(--accent-color-1), calc(0.55 * var(--gx-glow-int) * 2)));
+  }
+
+  /* Profile badges */
+  [class*="profileBadges_"] {
+    border: 1px solid rgba(var(--accent-color-1), 0.3) !important;
+    border-radius: var(--radius-sm) !important;
+    background: rgba(var(--dark-background-color), 0.7) !important;
+    transition: border-color var(--gx-transition), filter var(--gx-transition);
+  }
+  [class*="profileBadges_"]:hover {
+    border-color: rgba(var(--accent-color-1), 0.6);
+    filter: drop-shadow(0 0 6px rgba(var(--accent-color-1), calc(0.25 * var(--gx-glow-int) * 2)));
+  }
+
+  /* Role pills */
+  [class*="rolePill_"] {
+    border-radius: var(--radius-round) !important;
+    border: 1px solid rgba(var(--accent-color-1), 0.25) !important;
+    background: rgba(var(--dark-background-color), 0.6) !important;
+    transition: border-color var(--gx-transition), background var(--gx-transition);
+  }
+  [class*="rolePill_"]:hover {
+    border-color: rgba(var(--accent-color-1), 0.55);
+    background: rgba(var(--accent-color-1), 0.12) !important;
+  }
+
+  /* Role pills com cor real do cargo */
+  [class*="role_"][style*="--role-color"],
+  [class*="rolePill_"][style*="--role-color"] {
+    border-radius: var(--radius-round) !important;
+    border: 1px solid rgb(var(--role-color, var(--accent-color-1))) !important;
+    background: color-mix(in srgb, rgb(var(--role-color, var(--accent-color-1))) 18%, transparent) !important;
+  }
+
+  /* Profile tabs */
+  [class*="tabBar_"] [class*="tab_"] {
+    border-radius: var(--radius-sm) !important;
+    transition: background var(--gx-transition), color var(--gx-transition);
+  }
+  [class*="tabBar_"] [class*="tab_"]:hover {
+    background: rgba(var(--accent-color-1), 0.12);
+    border-radius: var(--radius-md) !important;
+  }
+  [class*="tabBar_"] [class*="tab_"][aria-selected="true"] {
+    background: rgba(var(--accent-color-1), 0.2);
+    border-radius: var(--radius-md) !important;
+    color: rgb(var(--fullwhite-font));
+  }
+
+  /* Activity cards */
+  [class*="userPopoutOuter_"] [class*="activity_"],
+  [class*="userProfileModalOuter_"] [class*="activity_"] {
+    border-radius: var(--radius-md) !important;
+    border: 1px solid rgba(var(--accent-color-1), 0.15);
+    transition: border-color var(--gx-transition);
+  }
+  [class*="userPopoutOuter_"] [class*="activity_"]:hover,
+  [class*="userProfileModalOuter_"] [class*="activity_"]:hover {
+    border-color: rgba(var(--accent-color-1), 0.4);
+  }
+
+  /* Barra de progresso Spotify */
+  [class*="activity_"] [class*="bar_"],
+  [class*="spotifyIcon_"] ~ [class*="bar_"] {
+    background: linear-gradient(90deg,
+      rgba(var(--accent-color-1), 0.6),
+      rgba(var(--accent-color-2), 0.6)
+    ) !important;
+    border-radius: var(--radius-round);
+  }
+
+  /* ——————————————————————————————————————————
+     ACCOUNT PANEL (canto inferior esquerdo)
+     —————————————————————————————————————————— */
+  [class*="accountProfileCard_"] {
+    border: 1px solid rgba(var(--accent-color-1), 0.25);
+    border-radius: var(--radius-lg) !important;
+    background: rgba(var(--dark-background-color), 0.55) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    transform: translateZ(0);
+    transition: border-color var(--gx-transition), filter var(--gx-transition);
+  }
+  [class*="accountProfileCard_"]:hover {
+    border-color: rgba(var(--accent-color-1), 0.55);
+    filter: drop-shadow(0 0 6px rgba(var(--accent-color-1), calc(0.3 * var(--gx-glow-int) * 2)));
+  }
+  [class*="accountProfileCard_"] [class*="avatar_"] img {
+    border-radius: var(--radius-round) !important;
+    border: 2px solid rgba(var(--accent-color-1), 0.55);
+    box-shadow: 0 0 6px rgba(var(--accent-color-1), 0.3), 0 2px 6px rgba(0,0,0,0.4);
+    transform: translateZ(0);
+    transition: border-color var(--gx-transition), filter var(--gx-transition);
+  }
+  [class*="accountProfileCard_"]:hover [class*="avatar_"] img {
+    border-color: rgba(var(--accent-color-1), 0.9);
+    filter: drop-shadow(0 0 8px rgba(var(--accent-color-1), calc(0.45 * var(--gx-glow-int) * 2)));
+  }
+  [class*="accountProfileCard_"] [class*="subtext_"] {
+    color: rgb(var(--normal-font));
+    opacity: 1;
+  }
+  [class*="accountProfileCard_"] button[class*="button_"] {
+    border-radius: var(--radius-round) !important;
+    clip-path: none !important;
+    transition: background var(--gx-transition), color var(--gx-transition), transform var(--gx-transition-fast);
+  }
+  [class*="accountProfileCard_"] button[class*="button_"]:hover {
+    background: rgba(var(--accent-color-1), 0.18);
+    color: rgb(var(--accent-color-2));
+    transform: translateY(-1px);
+  }
+  [class*="accountProfileCard_"] button[class*="button_"]:active {
+    transform: translateY(0) scale(0.96);
+  }
+
+  /* ——————————————————————————————————————————
+     STATUS INDICATORS — rx + drop-shadow
+     —————————————————————————————————————————— */
+  [class*="status_"] rect[fill] { rx: 7; }
+  [class*="status_"] rect[fill="#23a55a"] {
+    filter: drop-shadow(0 0 3px rgba(var(--accent-color-1), 0.6));
+  }
+  [class*="status_"] {
+    transform: translateZ(0);
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.6));
+  }
+
+  /* ——————————————————————————————————————————
+     IMAGES — atividades, embeds, attachments
+     —————————————————————————————————————————— */
+  [class*="largeImage_"] img,
+  [class*="smallImage_"] img,
+  [class*="albumArt_"] img,
+  [class*="asset_"] img,
+  [class*="largeAsset_"] img,
+  [class*="smallAsset_"] img,
+  [class*="artwork_"] img,
+  [class*="gameImage_"] img,
+  [class*="activityImage_"] img,
+  [class*="coverImage_"] img,
+  [class*="imageContainer_"] img {
+    border-radius: var(--radius-md) !important;
+    transform: translateZ(0);
+  }
+  [class*="largeImage_"]:hover img,
+  [class*="albumArt_"]:hover img,
+  [class*="imageContainer_"]:hover img {
+    border-radius: var(--radius-lg) !important;
+  }
+
+  [class*="embedWrapper"] [class*="thumbnail_"] img,
+  [class*="embedWrapper"] img[class*="image_"],
+  [class*="mediaGallery_"] img,
+  [class*="embedThumbnail"] img {
+    border-radius: var(--radius-md) !important;
+  }
+
+  [class*="imageWrapper_"] img,
+  [class*="attachment_"] img,
+  [class*="originalLink_"] img,
+  img[class*="lazyImg_"] {
+    border-radius: var(--radius-md) !important;
+    transform: translateZ(0);
+  }
+  [class*="imageWrapper_"]:hover img,
+  [class*="attachment_"]:hover img {
+    border-radius: var(--radius-lg) !important;
+  }
+
+  /* ——————————————————————————————————————————
+     SPOILER — blur suave ao revelar
+     —————————————————————————————————————————— */
+  [class*="spoiler_"][class*="Hidden"] {
+    transition: opacity var(--gx-transition), filter var(--gx-transition);
+  }
+  [class*="spoiler_"]:hover img,
+  [class*="spoiler_"]:hover [class*="spoilerContent"] {
+    opacity: 1;
+    filter: blur(0);
+    transition: opacity var(--gx-transition), filter var(--gx-transition);
+  }
+
+  /* ——————————————————————————————————————————
+     REPLY LINE — gradient accent
+     —————————————————————————————————————————— */
+  [class*="replyBar_"] {
+    background: linear-gradient(180deg,
+      rgba(var(--accent-color-1), 0.8),
+      rgba(var(--accent-color-1), 0.3)
+    ) !important;
+  }
+  [class*="repliedMessage_"] {
+    position: relative;
+  }
+  [class*="repliedMessage_"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    border-radius: var(--radius-round);
+    background: linear-gradient(180deg,
+      rgba(var(--accent-color-1), 0.8),
+      rgba(var(--accent-color-1), 0.3)
+    ) !important;
+    pointer-events: none;
+  }
+
+  /* ——————————————————————————————————————————
+     PINNED MESSAGES
+     —————————————————————————————————————————— */
+  [class*="pinMessage_"],
+  [class*="pinnedMessage_"] {
+    border-radius: var(--radius-md) !important;
+  }
+
+  /* ——————————————————————————————————————————
+     CONTEXT MENU + DIVIDERS
+     —————————————————————————————————————————— */
+  [class*="menu_"],
+  [class*="submenu_"],
+  [class*="contextMenu_"] {
+    border-radius: var(--radius-md) !important;
+    overflow: visible !important;
+  }
+  [class*="contextMenu_"] [class*="item_"],
+  [class*="menu_"] [class*="item_"] {
+    border-radius: var(--radius-sm);
+  }
+  [class*="menu_"] [class*="separator_"],
+  [class*="contextMenu_"] [class*="separator_"],
+  [class*="divider_"] {
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(var(--accent-color-1), 0.45),
+      transparent
+    ) !important;
+    height: 1px !important;
+    border: 0 !important;
+  }
+
+  /* ——————————————————————————————————————————
+     MEMBER LIST — hover ring + avatar scale
+     —————————————————————————————————————————— */
+  [class*="member_"]:hover {
+    box-shadow: inset 2px 0 0 rgba(var(--accent-color-1), 0.55);
+  }
+  [class*="member_"]:hover [class*="avatar_"] img {
+    transform: translateZ(0) scale(1.05);
+  }
+
+  /* Crown/bot/role icons */
+  [class*="botTag_"],
+  [class*="owner_"][class*="icon_"],
+  [class*="roleIcon_"],
+  [class*="crown_"] {
+    border-radius: var(--radius-round) !important;
+    filter: drop-shadow(0 0 3px rgba(var(--accent-color-1), 0.45));
+  }
+
+  /* ——————————————————————————————————————————
+     DM LIST — hover ring + avatar scale
+     —————————————————————————————————————————— */
+  [class*="channel_"][class*="private_"]:hover,
+  [class*="privateChannel_"]:hover {
+    box-shadow: inset 2px 0 0 rgba(var(--accent-color-1), 0.55);
+  }
+  [class*="privateChannel_"]:hover [class*="avatar_"] img {
+    transform: translateZ(0) scale(1.05);
+    transition: transform var(--gx-transition-fast);
+  }
+
+  /* DM unread: dot com caixa real + glow (sem piscar opacidade) */
+  [class*="privateChannel_"] [class*="avatar_"] {
+    position: relative;
+  }
+  [class*="privateChannel_"][class*="unread_"] [class*="avatar_"]::after {
+    content: "";
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-round);
+    background: rgba(var(--accent-color-1), 0.95) !important;
+    animation: gx-call-ring 1.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  [class*="unread_"] [class*="pill_"] {
+    background: rgba(var(--accent-color-1), 0.95) !important;
+    animation: gx-call-ring 1.8s ease-in-out infinite;
+  }
+
+  /* ——————————————————————————————————————————
+     BADGE MENTIONS — bounce (transform-only)
+     —————————————————————————————————————————— */
+  [class*="numberBadge_"] {
+    transform: translateZ(0);
+    transition: transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  [class*="mentionsBar_"]:hover [class*="numberBadge_"],
+  [class*="pill_"]:hover [class*="numberBadge_"] {
+    transform: scale(1.12);
+  }
+
+  /* ——————————————————————————————————————————
+     INCOMING CALL — ring glow animado
+     —————————————————————————————————————————— */
+  [class*="call_"][class*="incoming_"],
+  [class*="incomingCall_"] {
+    filter: drop-shadow(0 0 8px rgba(255,34,34,0.75));
+    animation: gx-call-ring 1.2s ease-in-out infinite;
+  }
+
+  /* ——————————————————————————————————————————
+     SETTINGS SIDEBAR — pill hover/selected
+     —————————————————————————————————————————— */
+  [class*="sidebarRegion_"] [class*="item_"]:hover,
+  [class*="settings_"] [class*="item_"]:hover {
+    background: rgba(var(--accent-color-1), 0.15);
+    border-radius: var(--radius-md);
+    transition: background var(--gx-transition);
+  }
+  [class*="sidebarRegion_"] [class*="item_"][class*="selected_"],
+  [class*="settings_"] [class*="item_"][class*="selected_"] {
+    background: rgba(var(--accent-color-1), 0.22);
+    border-radius: var(--radius-md);
+  }
+
+  /* ——————————————————————————————————————————
+     SWITCHES — pill sem scale (nao vaza do slot)
+     —————————————————————————————————————————— */
+  div[role="switch"],
+  [class*="switch_"] {
+    border-radius: var(--radius-round) !important;
+  }
+  div[role="switch"] [class*="slider_"],
+  [class*="switch_"] [class*="slider_"] {
+    border-radius: var(--radius-round) !important;
+  }
+
+  /* ——————————————————————————————————————————
+     RANGE SLIDERS — accent color
+     —————————————————————————————————————————— */
+  input[type="range"] {
+    accent-color: rgb(var(--accent-color-1));
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    background: rgb(var(--accent-color-1));
+    border-radius: var(--radius-round);
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    background: rgba(var(--accent-color-1), 0.3);
+    border-radius: var(--radius-round);
+  }
+
+  /* ——————————————————————————————————————————
+     SETTINGS AVATAR — ring accent
+     —————————————————————————————————————————— */
+  [class*="settings_"] [class*="profile_"] [class*="avatar_"] img,
+  [class*="userSettings_"] [class*="avatar_"] img {
+    border-radius: var(--radius-round) !important;
+    border: 2px solid rgba(var(--accent-color-1), 0.55);
+    box-shadow: 0 0 6px rgba(var(--accent-color-1), 0.3);
+  }
+
+  /* ——————————————————————————————————————————
+     TOASTS — slide + ring accent
+     —————————————————————————————————————————— */
+  [class*="toast_"],
+  [class*="notification_"][class*="toast_"] {
+    border: 1px solid rgba(var(--accent-color-1), 0.45);
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    transform: translateZ(0);
+    transition: transform 200ms ease, opacity var(--gx-transition);
+  }
+  [class*="toast_"]:hover {
+    filter: drop-shadow(0 0 6px rgba(var(--accent-color-1), calc(0.35 * var(--gx-glow-int) * 2)));
+  }
+
+  /* ——————————————————————————————————————————
+     NOTE INPUT — auto-grow no focus
+     —————————————————————————————————————————— */
+  [class*="note_"] textarea {
+    min-height: 28px;
+    transition: min-height var(--gx-transition), border-color var(--gx-transition);
+  }
+  [class*="note_"] textarea:focus-visible {
+    min-height: 48px;
+    border-radius: var(--radius-md) !important;
+    box-shadow: 0 0 0 1px rgba(var(--accent-color-1), 0.5), var(--gx-shadow-box);
+  }
+
+  /* ——————————————————————————————————————————
+     MUTUAL FRIENDS/SERVERS — scale hover
+     —————————————————————————————————————————— */
+  [class*="userProfileModalOuter_"] [class*="listRow_"],
+  [class*="userProfileModalOuter_"] [class*="mutualFriends_"] [class*="row_"],
+  [class*="userProfileModalOuter_"] [class*="mutualServers_"] [class*="row_"] {
+    border-radius: var(--radius-md);
+    transform: translateZ(0);
+    transition: transform var(--gx-transition-fast), background var(--gx-transition);
+  }
+  [class*="userProfileModalOuter_"] [class*="listRow_"]:hover,
+  [class*="userProfileModalOuter_"] [class*="mutualFriends_"] [class*="row_"]:hover,
+  [class*="userProfileModalOuter_"] [class*="mutualServers_"] [class*="row_"]:hover {
+    transform: scale(1.02);
+    background: rgba(var(--accent-color-1), 0.1);
+  }
+
+  /* ——————————————————————————————————————————
+     JOIN DATE / MEMBER SINCE
+     —————————————————————————————————————————— */
+  [class*="joinBadge_"],
+  [class*="memberSince_"],
+  [class*="lastSeen_"] {
+    color: rgb(var(--normal-font)) !important;
+    font-size: 12px;
+  }
+
+  /* ——————————————————————————————————————————
+     EMOJI + STICKERS
+     —————————————————————————————————————————— */
+  [class*="emojiItem_"] img,
+  [class*="sticker_"] img {
+    border-radius: var(--radius-sm) !important;
+  }
+
+  /* ——————————————————————————————————————————
+     BOT AVATARS / AUTOCOMPLETE
+     —————————————————————————————————————————— */
+  [class*="botAvatar_"] img,
+  [class*="autocomplete_"] [class*="avatar_"] img {
+    border-radius: var(--radius-round) !important;
+  }
+
+  /* ——————————————————————————————————————————
+     TOOLTIP
+     —————————————————————————————————————————— */
+  [class*="tooltipInner_"] {
+    border-radius: var(--radius-md) !important;
+    transform: translateZ(0);
+  }
+}
+
+
+/* ============================================================
+   LAYER states — will-change + contain em listas longas
+   ============================================================ */
+@layer states {
+  /* will-change apenas no hover em desktops */
+  @media (hover: hover) {
+    [class*="popout_"]:hover,
+    [class*="modal_"]:hover {
+      will-change: transform, opacity;
+    }
+  }
+
+  /* Contain isola listas, mas nunca recorta popouts/menus/tooltips */
+  [class*="members_"],
+  [class*="scroller_"] {
+    contain: layout style;
+  }
+
+  /* SEM content-visibility: a reserva intrinsica do Chromium causa salto
+     quando a mensagem entra na viewport. Preferimos pintar tudo. */
+  .messageListItem_SY_P2T,
+  [class*="messageListItem_"],
+  li[class^="message-"],
+  [class^="scrollerInner_"] > [class^="message-"] {
+    content-visibility: visible !important;
+  }
+
+  /* scroll-behavior auto previne jank com content-visibility */
+  [class*="scroller_"],
+  [class*="scrollerInner_"],
+  [class*="members_"] {
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ============================================================
+   LAYER a11y — prefers-reduced-motion + prefers-contrast
+   ============================================================ */
+@layer a11y {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+    /* Scanlines desativadas em reduced-motion */
+    html #app-mount::after {
+      display: none;
+    }
+    [class*="button_"]:hover,
+    nav[class*="guilds_"] [class*="card_"]:hover {
+      transform: none;
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    :root {
+      --normal-font: 240,240,240;
+      --muted-font: 180,180,180;
+      --link-text: 102,217,255;
+    }
+    [class*="messageListItem_"]:hover {
+      box-shadow: inset 3px 0 0 rgb(var(--accent-color-1));
+    }
+  }
+}
+
+
+/* ============================================================
+   SCROLLBAR — fora das layers (nao e stackavel)
+   ============================================================ */
+::-webkit-scrollbar       { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--accent-color-2), 0.45);
+  border-radius: var(--radius-round);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-color-1), 0.8);
+  background-clip: padding-box;
+}
