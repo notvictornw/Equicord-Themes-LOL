@@ -182,6 +182,7 @@ Se precisar adicionar um seletor novo, confirme o nome no DOM real do Discord an
 | `body { font-family: var(--cf) !important }` → Chakra Petch global | reflow e títulos mais altos | `body` com stack nativo em `base` |
 | `--font-display`/`--font-primary`/`--cf` = `var(--cf) !important` | componentes comuns herdam Chakra Petch mesmo com `body` nativo | redeclaração em `base` com a stack nativa e `!important`; `--customFont` continua só nos títulos |
 | `@font-face` "Chakra Petch" com `font-display:swap` no upstream | FOUT troca métricas depois do primeiro paint | títulos usam "OperaGX Chakra" com `display:optional`; nenhuma face `swap` é solicitada |
+| `#app-mount .messageContent_* { font-weight:500 }` e `.markup_* strong { text-shadow:... }` no upstream | texto mais espesso, leitura com cara de zoom | `#app-mount [class*="messageContent_"] { font-weight:400 }` e `[class*="markup_"] strong { text-shadow:none }` em `base` |
 | `background: ..., var(--background)` com JPEG base64 | tela coberta | `--background` cor sólida |
 | `overflow:hidden` em menu/submenu | submenu inalcançável | `overflow:visible !important` |
 | `border-radius:0 !important` em scrollbar | barra quadrada | raio `999px` em `base` |
@@ -220,12 +221,14 @@ Decisões tomadas para evitar CLS (Cumulative Layout Shift) e jank:
 2. Use classes com **sufixos diferentes dos reais** para provar resiliência a hash; para o chat, os sufixos atuais observados são `.content_z_gUBg`, `.messageListItem_SY_P2T` e `.messageContent_2i8Bfm`. `.content_4TfzT5` é o divisor de "novo dia" (`width:20%`), não o container do chat.
 3. Abra a página no navegador.
 4. Meça `getBoundingClientRect()` e `getComputedStyle()` **antes e depois** de injetar o import.
-5. Compare: altura da linha de mensagem, posição do composer, largura da sidebar/barra, `contentVisibility` (`visible`) e `containIntrinsicSize` (`none`). Confira também `--font-primary`/`--cf` (stack nativa), `--customFont` (`"OperaGX Chakra"`), `fontFamily` de título/corpo e `document.fonts`: `0` faces com `display:"swap"` e `status:"loaded"`.
+5. Compare: altura da linha de mensagem, posição do composer, largura da sidebar/barra, `contentVisibility` (`visible`) e `containIntrinsicSize` (`none`). Confira também `--font-primary`/`--cf` (stack nativa), `--customFont` (`"OperaGX Chakra"`), `fontFamily` de título/corpo, `fontWeight` de `.messageContent_*` (`400`) e `document.fonts`: `0` faces com `display:"swap"` e `status:"loaded"`.
 6. Confira o console do navegador em nível de erro.
 7. Apague a página temporária e feche a aba antes de commitar.
 8. Rode `git diff --check` e contagem de chaves (`{` vs `}`).
 
-Última verificação (v4.5.4.2): harness com o import do tema em `<style id="vencord-themes">`, comparando `HEAD` (v4.5.4.1) contra a versão atual. Geometria idêntica nos dois: título `y=82.4375`, `h=42`; mensagem `y=145.875`, `h=18`; wrapper da mensagem `y=145.875`, `h=18`; nav/sidebar/grupo inalterados. Diferença funcional: `--font-primary`, `--font-display` e `--cf` passaram de `"Chakra Petch"` para a stack nativa; `--customFont` passou para `"OperaGX Chakra"`; `0` faces `swap` carregadas contra `2` antes; `zoom` calculado continua `1` sem declaração no tema. Medição anterior (v4.5.4.1): mensagem 20px→20px, composer y 104→105, sidebar 240→240, mount 841→841.
+Verificação v4.5.4.2: harness com o import do tema em `<style id="vencord-themes">`, comparando `HEAD` (v4.5.4.1) contra a versão atual. Geometria idêntica nos dois: título `y=82.4375`, `h=42`; mensagem `y=145.875`, `h=18`; wrapper da mensagem `y=145.875`, `h=18`; nav/sidebar/grupo inalterados. Diferença funcional: `--font-primary`, `--font-display` e `--cf` passaram de `"Chakra Petch"` para a stack nativa; `--customFont` passou para `"OperaGX Chakra"`; `0` faces `swap` carregadas contra `2` antes; `zoom` calculado continua `1` sem declaração no tema. Medição anterior (v4.5.4.1): mensagem 20px→20px, composer y 104→105, sidebar 240→240, mount 841→841.
+
+Última verificação (v4.5.4.3): mesmo harness, agora comparando `HEAD` (v4.5.4.2) contra a versão atual, com `<strong>` dentro de `.messageContent_*`. `fontWeight` da mensagem caiu de `500` para `400`; `<strong>` permanece `600` com `textShadow: none`. Geometria idêntica: título `y=82.4375`, `h=42`; mensagem e wrapper `y=145.875`, `h=18`; nav `x=8`, `y=8`, `w=1264`, `h=18`. `document.fonts`: `22` faces Chakra no total, `16` `swap`/`0` carregadas, `6` `optional`/`1` carregada nos dois estados — a correção não trouxe nenhuma face nova.
 
 ---
 
@@ -295,6 +298,7 @@ Ideias ordenadas por valor, sem obrigatoriedade:
 | 4.5.4 | Spacing do upstream zerado; fonte base nativa. |
 | 4.5.4.1 | `display=optional`, sem reserva 72px, `box-sizing` em nav/sidebar. |
 | 4.5.4.2 | Variáveis de fonte globais neutralizadas, família de título própria (`"OperaGX Chakra"`) sem faces `swap`, densidade nativa preservada e `zoom` forçado removido. |
+| 4.5.4.3 | Peso 400 no texto das mensagens e `text-shadow` removido do `<strong>`, seguindo o padrão do tema Ultra (BetterDiscord). |
 
 ---
 

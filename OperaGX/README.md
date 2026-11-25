@@ -9,6 +9,7 @@ Fork do OperaGX do [HawkRatio](https://github.com/HawkRatio/OperaGXTheme) (antig
 
 ## Sincronização v4.1
 
+- v4.5.4.3: texto das mensagens com `font-weight: 400` (a base forçava 500) e `<strong>` sem `text-shadow` — mesma ideia do Ultra (BetterDiscord), sem mexer em tamanhos nativos. Geometria medida idêntica.
 - v4.5.4.2: `--font-primary`, `--font-display` e `--cf` devolvidos ao stack nativo do Discord — o upstream os forçava para Chakra Petch com `!important` e isso vazava para componentes comuns mesmo com o `body` nativo. Títulos agora usam "OperaGX Chakra" (`display:optional`), família local que evita as faces `swap` da base: nenhuma face `swap` é carregada e a geometria medida continua idêntica. `zoom` forçado removido. Documentação técnica em [`docs/THEME_ARCHITECTURE.md`](../docs/THEME_ARCHITECTURE.md).
 - v4.5.4.1: fonte com `display=optional` (sem FOUT/reflow), `content-visibility: visible` nas mensagens (sem reserva 72px), `box-sizing: border-box`/`margin: 0` absorvendo bordas e margens do upstream.
 - v4.5.4: salto de layout eliminado — o `padding-top:8px` + `margin-top:8px` e o `margin-left:6px`/`border-top` que o upstream injeta em cada linha de canal são zerados por prefixo. `--categorySize: 12px`, corpo com fonte nativa (`gg sans`/`Noto Sans`/Helvetica/Arial) e Chakra Petch mantida só nos títulos. Resizer com `pointer-events`/`touch-action: none`.
@@ -38,7 +39,7 @@ Fork do OperaGX do [HawkRatio](https://github.com/HawkRatio/OperaGXTheme) (antig
 **UX**
 - Status indicator com ring, account panel redesenhado, popout/modal de perfil estilo GX, raios consistentes em menus/tooltips/scrollbars, replies com accent, mentions pill animada, unread com glow, call ring, toasts com slide. Hover mantém a forma e não empurra layout; sidebar de canais flexível, servidores com imagem completa e chamada com avatares circulares.
 
-Se o layout continuar igual depois de atualizar, confirma o `@version: 4.5.4.2` no CSS carregado e desativa o QuickCSS. Reativa o tema para romper cache; QuickCSS fica fora de camadas e vence qualquer override do fork.
+Se o layout continuar igual depois de atualizar, confirma o `@version: 4.5.4.3` no CSS carregado e desativa o QuickCSS. Reativa o tema para romper cache; QuickCSS fica fora de camadas e vence qualquer override do fork.
 
 ## Instalação
 

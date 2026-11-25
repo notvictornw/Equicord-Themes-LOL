@@ -1,8 +1,9 @@
 /**
  * @name OperaGX (NotVictorNW Fork)
  * @author NotVictorNW (fork do tema original por Hawk/L-Ratio)
- * @version 4.5.4.2
+ * @version 4.5.4.3
  * @description Fork modificado, otimizado e melhorado do tema OperaGX original por Hawk/L-Ratio.
+ *   v4.5.4.3 — Texto de mensagem com peso nativo 400; correcao de fonte e spacing mantidas.
  *   v4.5.4.2 — Variaveis de fonte do upstream neutralizadas; titulos sem faces swap e sem zoom forçado.
  *   v4.5.4.1 — Sem FOUT e sem reserva 72px em mensagens; larguras nativas preservadas.
  *   v4.5.4 — Salto de layout eliminado: spacing do upstream zerado e fonte base nativa.
@@ -242,6 +243,15 @@
   }
   body {
     font-family: "gg sans", "Noto Sans", Helvetica, Arial, sans-serif !important;
+  }
+  /* Ultra (BD) faz o mesmo: peso 400 no texto da mensagem. O upstream
+     força 500 e ainda aplica text-shadow em todo <strong>, o que engorda
+     a leitura e passa a sensação de zoom. Correcao em base, por prefixo. */
+  #app-mount [class*="messageContent_"] {
+    font-weight: 400;
+  }
+  #app-mount [class*="markup_"] strong {
+    text-shadow: none !important;
   }
 
   /* Chamada: tamanho Discord (32px), avatar redondo e botões sem clip-path. */
