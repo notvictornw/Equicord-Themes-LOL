@@ -1,8 +1,9 @@
 /**
  * @name OperaGX (NotVictorNW Fork)
  * @author NotVictorNW (fork do tema original por Hawk/L-Ratio)
- * @version 4.5.5
+ * @version 4.5.6
  * @description Fork modificado, otimizado e melhorado do tema OperaGX original por Hawk/L-Ratio.
+ *   v4.5.6 — Base sem layers: cascata igual a dos outros temas; call arredondada e salto de mensagem corrigido.
  *   v4.5.5 — Geometria nativa dos icones de servidor restaurada; entry *.theme.css para BetterDiscord.
  *   v4.5.4.3 — Texto de mensagem com peso nativo 400; correcao de fonte e spacing mantidas.
  *   v4.5.4.2 — Variaveis de fonte do upstream neutralizadas; titulos sem faces swap e sem zoom forçado.
@@ -16,7 +17,7 @@
  *   v4.3 — Correções de UI/UX: raios e bordas restaurados, hovers sem salto, overlays sem clip.
  *   v4.2 — FolderColumns nativo removido; colunas ficam a cargo de plugins dedicados.
  *   v4.1.2 — Wallpaper do upstream neutralizado; scanlines movidas de ::before para ::after.
- *   v4.1.1 — Base importada em @layer base: overrides do fork voltam a ganhar do upstream.
+ *   v4.1.1 — Base importada por CDN; overrides do fork passaram a ganhar do upstream.
  *   v4.1 — Base sincronizada com HawkRatio/OperaGXTheme v1.2 (CDN ativo + nomes de classe 11/2026).
  *   Paleta vermelha GX, Chakra Petch, scanlines, glow e HUD preservados.
  *   v4.0 — Reescrita completa com melhorias premium otimizadas para PCs fracos:
@@ -39,18 +40,17 @@
  */
 
 /* ============================================================
-   IMPORTS: base do tema via CDN oficial HawkRatio v1.2 (nomes de classe
-   11/2026) dentro de @layer base — CSS fora de layer sempre vence, por
-   isso a base nao pode ficar unlayered ou atropela os overrides do fork.
-   Nao inlinear (99% e base64). CDN antigo L-Ratio esta offline (404).
+   IMPORTS — cascata unlayered, igual à dos outros temas:
+   a base entra primeiro pelo CDN oficial HawkRatio v1.2; tudo que vem
+   depois neste arquivo sobrescreve a base por especificidade/ordem.
+   Camadas fizeram o CSS normal do Discord ganhar das correcoes do fork
+   no toggle, causando aplicacao parcial e salto. Nao inlinear a base
+   (99% e base64). CDN antigo L-Ratio esta offline (404).
    O upstream traz @font-face "Chakra Petch" com display:swap. O fork nao
-   importa Google Fonts e nao usa essa familia: titulos usam "OperaGX
-   Chakra", definida abaixo com display:optional. Nenhuma face swap do
-   upstream e solicitada, logo nao ha FOUT nem reflow por troca de fonte.
+   usa essa familia: titulos usam "OperaGX Chakra", definida abaixo com
+   display:optional. Nenhuma face swap e solicitada.
    ============================================================ */
-@layer base, opengx, overrides, states, a11y;
-
-@import url(https://hawkratio.github.io/OperaGXTheme/release/main.css) layer(base);
+@import url(https://hawkratio.github.io/OperaGXTheme/release/main.css);
 
 /* Faces locais da familia exclusiva dos titulos. Somente latim/latim-ext
    (o texto da UI e portugues); weights intermediarios casam com o mais
@@ -106,12 +106,9 @@
 
 /* ============================================================
    BASE OVERRIDES — o upstream força radius:0 !important em
-   .theme-dark/.theme-light. Declarar dentro de @layer base,
-   depois do import e com a mesma especificidade, é a única
-   forma de ganhar: important em camada posterior não vence
-   important da camada anterior.
+   .theme-dark/.theme-light. A base e o fork sao unlayered; a ordem
+   e a especificidade decidem, igual a qualquer outro tema.
    ============================================================ */
-@layer base {
   .theme-light,
   .theme-dark,
   .theme-darker,
@@ -254,44 +251,32 @@
     text-shadow: none !important;
   }
 
-  /* Chamada: tamanho Discord (32px), avatar redondo e botões sem clip-path. */
-  [class*="callContainer"] {
-    border-radius: 16px !important;
+  /* Chamada: o Discord ja define 32px e o proprio gap. O upstream ata
+     actionButtons_/lookFilled.colorBrand com border-radius:2px e clip-path,
+     o que deixa os controles quadrados. Mirar as classes reais por prefixo
+     devolve o formato arredondado sem mexer em largura/altura. */
+  #app-mount [class*="actionButtons_"] [class*="button_"],
+  #app-mount [class*="lookFilled_"][class*="colorBrand_"],
+  #app-mount [class*="lookFilled_"][class*="colorGreen_"] {
+    border-radius: var(--radius-md) !important;
     clip-path: none !important;
-    padding: 4px !important;
-    margin: 4px !important;
+    --cp-size: 0px !important;
+    font-weight: 600 !important;
   }
-  [class*="callContainer"] [class*="participant"] {
-    border-radius: 12px !important;
+  #app-mount [class*="tileFrameGrid_"],
+  #app-mount [class*="tileFrame_"] {
+    border-radius: var(--radius-md) !important;
     clip-path: none !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    min-height: 36px !important;
   }
-  [class*="callContainer"] [class*="avatar"] {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    max-width: 32px !important;
+  #app-mount [class*="participantAvatar_"] {
     border-radius: 50% !important;
-    overflow: hidden !important;
     clip-path: none !important;
   }
-  [class*="callContainer"] [class*="avatar"] img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 50% !important;
-  }
-  [class*="callContainer"] [class*="button"] {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    border-radius: 10px !important;
-    clip-path: none !important;
-    display: grid !important;
-    place-items: center !important;
+
+  /* Grupo de mensagens: o upstream força 15px via style inline. */
+  #app-mount [class*="wrapper_"][style*="margin-top"] {
+    margin-top: 0 !important;
+    border-top: 0 !important;
   }
 
   /* Highlight de mensagem: dentro do balão, nunca fora dele. */
@@ -341,7 +326,6 @@
     clip-path: none !important;
     border-radius: 12px !important;
   }
-}
 
 /* ============================================================
    :root — Design tokens + variaveis configuráveis
@@ -487,9 +471,8 @@ html #app-mount::after {
 
 
 /* ============================================================
-   LAYER overrides
+   SECTION overrides
    ============================================================ */
-@layer overrides {
 
   /* ——————————————————————————————————————————
      BOTOES — rounding + hover/active
@@ -587,7 +570,7 @@ html #app-mount::after {
   /* ——————————————————————————————————————————
      ICONES DE SERVIDOR — 100% nativos
      Nenhum raio, width, gap, padding ou object-fit é forçado.
-     O fork só desliga o clip-path do upstream em @layer base.
+     O fork só desliga o clip-path do upstream na base.
      —————————————————————————————————————————— */
 
   /* ——————————————————————————————————————————
@@ -1290,13 +1273,11 @@ html #app-mount::after {
     border-radius: var(--radius-md) !important;
     transform: translateZ(0);
   }
-}
 
 
 /* ============================================================
-   LAYER states — will-change + contain em listas longas
+   SECTION states — will-change + contain em listas longas
    ============================================================ */
-@layer states {
   /* will-change apenas no hover em desktops */
   @media (hover: hover) {
     [class*="popout_"]:hover,
@@ -1326,13 +1307,11 @@ html #app-mount::after {
   [class*="members_"] {
     scroll-behavior: auto !important;
   }
-}
 
 
 /* ============================================================
-   LAYER a11y — prefers-reduced-motion + prefers-contrast
+   SECTION a11y — prefers-reduced-motion + prefers-contrast
    ============================================================ */
-@layer a11y {
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -1362,7 +1341,6 @@ html #app-mount::after {
       box-shadow: inset 3px 0 0 rgb(var(--accent-color-1));
     }
   }
-}
 
 
 /* ============================================================
