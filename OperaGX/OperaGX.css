@@ -1,8 +1,9 @@
 /**
  * @name OperaGX (NotVictorNW Fork)
  * @author NotVictorNW (fork do tema original por Hawk/L-Ratio)
- * @version 4.5.4.1
+ * @version 4.5.4.2
  * @description Fork modificado, otimizado e melhorado do tema OperaGX original por Hawk/L-Ratio.
+ *   v4.5.4.2 — Variaveis de fonte do upstream neutralizadas; titulos sem faces swap e sem zoom forçado.
  *   v4.5.4.1 — Sem FOUT e sem reserva 72px em mensagens; larguras nativas preservadas.
  *   v4.5.4 — Salto de layout eliminado: spacing do upstream zerado e fonte base nativa.
  *   v4.5.3 — Tamanhos nativos do Discord restaurados; zoom/tipografia extras removidos.
@@ -36,21 +37,70 @@
  */
 
 /* ============================================================
-   IMPORTS: Chakra Petch 400/600/700 para titulos.
-   font-display:swap previne FOIT; synthesis:none evita reflow.
-   Base do tema via CDN oficial HawkRatio v1.2 (nomes de classe 11/2026),
-   dentro de @layer base — CSS fora de layer sempre vence, por isso a base
-   nao pode ficar unlayered ou atropela os overrides do fork.
+   IMPORTS: base do tema via CDN oficial HawkRatio v1.2 (nomes de classe
+   11/2026) dentro de @layer base — CSS fora de layer sempre vence, por
+   isso a base nao pode ficar unlayered ou atropela os overrides do fork.
    Nao inlinear (99% e base64). CDN antigo L-Ratio esta offline (404).
-   ============================================================ */
-@import url(https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=optional);
-@import url(https://hawkratio.github.io/OperaGXTheme/release/main.css) layer(base);
-
-/* ============================================================
-   @layer cascade: base < opengx < overrides < states < a11y
-   Evita !important desnecessario e da previsibilidade total.
+   O upstream traz @font-face "Chakra Petch" com display:swap. O fork nao
+   importa Google Fonts e nao usa essa familia: titulos usam "OperaGX
+   Chakra", definida abaixo com display:optional. Nenhuma face swap do
+   upstream e solicitada, logo nao ha FOUT nem reflow por troca de fonte.
    ============================================================ */
 @layer base, opengx, overrides, states, a11y;
+
+@import url(https://hawkratio.github.io/OperaGXTheme/release/main.css) layer(base);
+
+/* Faces locais da familia exclusiva dos titulos. Somente latim/latim-ext
+   (o texto da UI e portugues); weights intermediarios casam com o mais
+   proximo porque font-synthesis esta desligada na raiz. */
+@font-face {
+  font-family: "OperaGX Chakra";
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url("https://fonts.gstatic.com/s/chakrapetch/v13/cIf6MapbsEk7TDLdtEz1BwkWn6pg.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "OperaGX Chakra";
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url("https://fonts.gstatic.com/s/chakrapetch/v13/cIf6MapbsEk7TDLdtEz1BwkWkapgeL4.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "OperaGX Chakra";
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url("https://fonts.gstatic.com/s/chakrapetch/v13/cIflMapbsEk7TDLdtEz1BwkeQI51R5_F.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "OperaGX Chakra";
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url("https://fonts.gstatic.com/s/chakrapetch/v13/cIflMapbsEk7TDLdtEz1BwkeQI51SZ_F7AY.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "OperaGX Chakra";
+  font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url("https://fonts.gstatic.com/s/chakrapetch/v13/cIflMapbsEk7TDLdtEz1BwkeJI91R5_F.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "OperaGX Chakra";
+  font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url("https://fonts.gstatic.com/s/chakrapetch/v13/cIflMapbsEk7TDLdtEz1BwkeJI91SZ_F7AY.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 
 /* ============================================================
    BASE OVERRIDES — o upstream força radius:0 !important em
@@ -157,13 +207,6 @@
     background: rgba(var(--accent-color-1), 0.25) !important;
   }
 
-  /* Reset duro de zoom residual: tema/loader não pode escalar o app. */
-  html,
-  html body,
-  html body #app-mount {
-    zoom: 1 !important;
-  }
-
   /* CAUSA DO SALTO: o upstream coloca padding-top:8px + margin-top:8px
      em CADA container de canal/membro, além de margin-left:6px e border-top.
      Isso empurra a sidebar e as mensagens para baixo. Zerar por prefixo
@@ -180,6 +223,19 @@
     margin-left: 0 !important;
     padding-top: 0 !important;
     border-top: 0 !important;
+  }
+  /* O upstream redefine --font-primary/--font-display como Chakra Petch
+     com !important e isso vaza para componentes que nao sao titulos.
+     Restaurar a stack nativa aqui, no mesmo ponto da cascata. */
+  .theme-light,
+  .theme-dark,
+  .theme-darker,
+  .theme-midnight {
+    --font-primary: "gg sans", "Noto Sans", Helvetica, Arial, sans-serif !important;
+    --font-display: "gg sans", "Noto Sans", Helvetica, Arial, sans-serif !important;
+    --font-codeblocks: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace !important;
+    --cf: "gg sans", "Noto Sans", Helvetica, Arial, sans-serif !important;
+    --cbcf: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace !important;
   }
   :root {
     --categorySize: 12px;
@@ -311,8 +367,8 @@
   --font-in-accent:                 0,0,0;
 
   /* — Font family */
-  --customFont:                     "Chakra Petch";
-  --codeBlocksCustomFont:           "Chakra Petch";
+  --customFont:                     "OperaGX Chakra";
+  --codeBlocksCustomFont:           Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
   --category-name-transform:        unset;
   font-synthesis:                   none;
 

@@ -2,7 +2,7 @@
 
 Este documento explica **como o tema funciona**, **por que cada decisão existe**, **onde mexer** e **o que ainda pode ser melhorado**. Ele é voltado a devs que precisam manter ou forkar o tema sem quebrar a identidade visual nem reintroduzir saltos de layout.
 
-Público assumido: uma pessoa usando Equicord com o tema aplicado na inicialização. Não há build, pacote ou servidor — o "deploy" é um arquivo CSS servido por `raw.githubusercontent.com`.
+Público assumido: uma pessoa usando Equicord (ou outro mod compatível com temas CSS no estilo Vencord) com o tema aplicado na inicialização. Não há build, pacote ou servidor — o "deploy" é um arquivo CSS servido por `raw.githubusercontent.com`. Não existe documentação oficial independente do BetterCord; o contrato de tema é o mesmo CSS/Vencord e o mesmo `@import`.
 
 ---
 
@@ -46,7 +46,7 @@ O Equicord cria um `<style id="vencord-themes">` e coloca links de tema como:
 @import url("https://raw.githubusercontent.com/notvictornw/Equicord-Themes/main/OperaGX/OperaGX.css");
 ```
 
-Ou seja: **o tema já entra dentro de um `@import`**. Isso é importante porque `@import` aninhado é válido, mas a ordem é rígida.
+Ou seja: **o tema já entra dentro de um `@import`**. Isso vem do loader: `Equicord/src/api/Themes.ts` monta `themesStyle.textContent = Array.from(links).map(link => \`@import url("${link.trim()}")\`).join("\n")` em `<style id="vencord-themes">`, com suporte a `@light`/`@dark` e cache-busting em `vencord:///themes/<id>?v=<Date.now()>`. `@import` aninhado é válido, mas a ordem é rígida.
 
 Regras MDN aplicáveis (confirmadas em `https://developer.mozilla.org/en-US/docs/Web/CSS/@import`):
 
@@ -59,8 +59,9 @@ Por isso o topo do arquivo é, nesta ordem:
 ```css
 @layer base, opengx, overrides, states, a11y;
 
-@import url(https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=optional);
 @import url(https://hawkratio.github.io/OperaGXTheme/release/main.css) layer(base);
+
+@font-face { font-family: "OperaGX Chakra"; /* ... */ font-display: optional; }
 ```
 
 > **Erro histórico:** a base já foi importada sem `layer(base)`. CSS fora de camada sempre vence qualquer `@layer`. Isso fazia os overrides do fork perderem e o wallpaper base64 do upstream cobrir o app. Corrigido em v4.1.1.
@@ -77,7 +78,7 @@ A ordem é de menor para maior prioridade. Regra geral: **o que corrige o upstre
 
 | Camada | Conteúdo | Exemplo |
 | --- | --- | --- |
-| `base` | Neutralização do upstream: raios forçados a `0px !important`, `clip-path`, margens, máscaras, fonte global, `zoom`, `box-sizing`. | `--radius-md: 12px !important` em `.theme-dark`; `margin-top:0` em linhas de canal. |
+| `base` | Neutralização do upstream: raios forçados a `0px !important`, `clip-path`, margens, máscaras, variáveis de fonte globais e `box-sizing`. | `--radius-md: 12px !important` em `.theme-dark`; `--font-primary` nativo; `margin-top:0` em linhas de canal. |
 | `opengx` | Tokens e elementos próprios do fork. | scanline, glow, keyframes, variáveis de cor. |
 | `overrides` | Visual do fork sobre componentes reais. | botões, avatares, popout, menus, mensagens, HUD. |
 | `states` | Otimizações e estado de scroll. | `contain: layout style` em listas; `content-visibility: visible` em mensagens. |
@@ -139,7 +140,9 @@ O sufixo `_s` gera a variável runtime `_v` usada no CSS (`--gx-glow-int`, `--gx
 | `--accent-color-2` | `255,55,109` | Versão clara para texto sobre fundo escuro (contraste). |
 | `--gx-red`, `--gx-red-2` | `255,34,34`, `255,66,66` | Acento de chamada/estado. |
 | `--fullwhite-font`, `--normal-font`, `--muted-font` | `220,222,225`, `188,190,194`, `108,112,120` | Escala de texto. |
-| `--customFont` | `"Chakra Petch"` | Usada **só em títulos**, não no `body`. |
+| `--customFont` | `"OperaGX Chakra"` | Família local com `font-display: optional`, usada **só em títulos**, nunca no `body`. O nome próprio impede o uso das faces `swap` do upstream. |
+| `--font-primary`, `--font-display`, `--cf` | stack nativa (`gg sans`/`Noto Sans`/Helvetica/Arial) | Redefinidas em `.theme-*` dentro de `base` com `!important`: o upstream as força para `var(--cf)` e isso vazava para componentes que não são títulos. |
+| `--codeBlocksCustomFont`, `--cbcf` | stack nativa de monospace | Blocos de código não usam Chakra Petch. |
 | `--border-brightness` | `0.35` | upstream consome essa var para bordas; com `0` elas ficavam invisíveis. |
 | `--radius-sm/md/lg` | `8/12/16px` | Restauradas em `base` porque o upstream força `0px !important`. |
 | `--categorySize` | `12px` | upstream usa `var(--categorySize, 15px)` em categorias/grupos. |
@@ -176,7 +179,9 @@ Se precisar adicionar um seletor novo, confirme o nome no DOM real do Discord an
 | `.tree_5dqHTG` com `mask-size:100% 16px` | ícones de servidor com fade em cima/baixo | `mask:none`/`mask-image:none`/`mask-size:auto` |
 | `.card_e90879 { margin:1px }` | ícone 72px vira 70px | `margin:0` no card/loaded |
 | `padding-top:8px` + `margin-top:8px` em `.containerDefault_*` | linha de canal duplicava altura | `padding-top:0`, `margin-top:0`, `margin-left:0`, `border-top:0` em `base` |
-| `body { font-family: var(--cf) !important }` → Chakra Petch global | reflow e títulos 5px mais altos | `body` com stack nativo em `base`; Chakra só nos títulos |
+| `body { font-family: var(--cf) !important }` → Chakra Petch global | reflow e títulos mais altos | `body` com stack nativo em `base` |
+| `--font-display`/`--font-primary`/`--cf` = `var(--cf) !important` | componentes comuns herdam Chakra Petch mesmo com `body` nativo | redeclaração em `base` com a stack nativa e `!important`; `--customFont` continua só nos títulos |
+| `@font-face` "Chakra Petch" com `font-display:swap` no upstream | FOUT troca métricas depois do primeiro paint | títulos usam "OperaGX Chakra" com `display:optional`; nenhuma face `swap` é solicitada |
 | `background: ..., var(--background)` com JPEG base64 | tela coberta | `--background` cor sólida |
 | `overflow:hidden` em menu/submenu | submenu inalcançável | `overflow:visible !important` |
 | `border-radius:0 !important` em scrollbar | barra quadrada | raio `999px` em `base` |
@@ -189,11 +194,11 @@ Se precisar adicionar um seletor novo, confirme o nome no DOM real do Discord an
 
 Decisões tomadas para evitar CLS (Cumulative Layout Shift) e jank:
 
-- **`display=optional` no Google Fonts.** Com `display=swap`, a fonte chega depois e troca as métricas, empurrando texto (FOUT). `optional` usa a fonte apenas se já estiver cacheada; na primeira visita o fallback nativo é usado sem reflow.
+- **Família de título própria com `font-display:optional`.** O fork não importa o Google Fonts e nunca usa a família "Chakra Petch" do upstream (`swap`). "OperaGX Chakra" tem seis `@font-face` locais (400/600/700, latim + latim-ext) com `optional`: se a fonte não estiver pronta no primeiro paint, o fallback é usado sem troca de métricas. Verificado no harness: `0` faces `swap` carregadas.
 - **Sem `content-visibility:auto` em mensagens.** O valor reservado era `contain-intrinsic-size: auto 72px` — sintaxe de **um valor**, aplicada aos dois eixos. Mensagens fora da tela reservavam 72×72px e causavam salto ao rolar. Agora `content-visibility:visible`.
 - **`contain: layout style` restrito** a `[class*="members_"]` e `[class*="scroller_"]`. Nunca `paint`: ele corta popout/tooltip.
 - **`box-sizing:border-box`** em nav e sidebar para absorver bordas de 1–2px do upstream sem mudar largura.
-- **`zoom: 1 !important`** em `html`/`body`/`#app-mount` para neutralizar zoom residual de loader/theme.
+- **QuickCSS do usuário fica fora de camadas** e, por isso, vence qualquer `@layer` do tema. Se o layout "parecer zoom" só com o tema ligado, desative QuickCSS primeiro; a FAQ oficial do Equicord recomenda exatamente isso antes de culpar o tema.
 - **Scanlines**: `z-index:1`, `pointer-events:none`, `mix-blend-mode:normal`, opacidade ~0.024 e máscara com fade de 80px no topo/base. Nunca use `z-index:9999`: isso cobria modais e composer.
 - **Animações** só com `transform`/`opacity`/`filter`. `@keyframes gx-glitch` foi removido porque dependia de `data-text` que o Discord não fornece.
 
@@ -212,15 +217,15 @@ Decisões tomadas para evitar CLS (Cumulative Layout Shift) e jank:
 ## 11. Como verificar alterações
 
 1. Crie uma página HTML temporária na raiz do repo com `<style id="vencord-themes">@import url("OperaGX/OperaGX.css");</style>`.
-2. Use classes com **sufixos diferentes dos reais** para provar resiliência a hash.
+2. Use classes com **sufixos diferentes dos reais** para provar resiliência a hash; para o chat, os sufixos atuais observados são `.content_z_gUBg`, `.messageListItem_SY_P2T` e `.messageContent_2i8Bfm`. `.content_4TfzT5` é o divisor de "novo dia" (`width:20%`), não o container do chat.
 3. Abra a página no navegador.
 4. Meça `getBoundingClientRect()` e `getComputedStyle()` **antes e depois** de injetar o import.
-5. Compare: altura da linha de mensagem (~20px), posição do composer (~104–105px), largura da sidebar (240px), largura da barra (72px), `contentVisibility` (`visible`), `containIntrinsicSize` (`none`).
+5. Compare: altura da linha de mensagem, posição do composer, largura da sidebar/barra, `contentVisibility` (`visible`) e `containIntrinsicSize` (`none`). Confira também `--font-primary`/`--cf` (stack nativa), `--customFont` (`"OperaGX Chakra"`), `fontFamily` de título/corpo e `document.fonts`: `0` faces com `display:"swap"` e `status:"loaded"`.
 6. Confira o console do navegador em nível de erro.
 7. Apague a página temporária e feche a aba antes de commitar.
 8. Rode `git diff --check` e contagem de chaves (`{` vs `}`).
 
-Última verificação (v4.5.4.1): mensagem 20px→20px, composer y 104→105, sidebar 240→240, mount 841→841, zero erros. O delta de 1px vem do resizer de 6px e das bordas nativas.
+Última verificação (v4.5.4.2): harness com o import do tema em `<style id="vencord-themes">`, comparando `HEAD` (v4.5.4.1) contra a versão atual. Geometria idêntica nos dois: título `y=82.4375`, `h=42`; mensagem `y=145.875`, `h=18`; wrapper da mensagem `y=145.875`, `h=18`; nav/sidebar/grupo inalterados. Diferença funcional: `--font-primary`, `--font-display` e `--cf` passaram de `"Chakra Petch"` para a stack nativa; `--customFont` passou para `"OperaGX Chakra"`; `0` faces `swap` carregadas contra `2` antes; `zoom` calculado continua `1` sem declaração no tema. Medição anterior (v4.5.4.1): mensagem 20px→20px, composer y 104→105, sidebar 240→240, mount 841→841.
 
 ---
 
@@ -262,7 +267,7 @@ Checklist antes de commit:
 Ideias ordenadas por valor, sem obrigatoriedade:
 
 1. **Teste no Discord real automatizado** — hoje toda verificação é sintética. Um screenshot + DOM dump do cliente real eliminaria a última milha de incerteza sobre hash e layout.
-2. **Métricas de fallback da Chakra Petch** — `@font-face` com `size-adjust`, `ascent-override`, `descent-override` e `line-gap-override` permitiria `display:swap` sem CLS, trazendo a fonte também na primeira visita.
+2. **Métricas de fallback da "OperaGX Chakra"** — `@font-face` com `size-adjust`, `ascent-override`, `descent-override` e `line-gap-override` permitiria `display:swap` sem CLS e exibir Chakra já na primeira visita; hoje `optional` prefere estabilidade e usa fallback até a fonte estar em cache.
 3. **Sincronização upstream automatizada** — script que baixa `main.css`, faz diff e avisa quando surgir `!important` novo.
 4. **Opção para ligar/desligar glow, scanline e highlight** — hoje só intensidade; um `@var boolean` por efeito daria controle fino.
 5. **Polimento da call UI** — upstream quase não estiliza chamadas; há espaço para participantes em grid, falante ativo com ring e botões com estado de mute/vídeo.
@@ -289,6 +294,7 @@ Ideias ordenadas por valor, sem obrigatoriedade:
 | 4.5.3 | Tamanhos nativos devolvidos ao Discord. |
 | 4.5.4 | Spacing do upstream zerado; fonte base nativa. |
 | 4.5.4.1 | `display=optional`, sem reserva 72px, `box-sizing` em nav/sidebar. |
+| 4.5.4.2 | Variáveis de fonte globais neutralizadas, família de título própria (`"OperaGX Chakra"`) sem faces `swap`, densidade nativa preservada e `zoom` forçado removido. |
 
 ---
 

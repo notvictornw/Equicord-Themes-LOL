@@ -5,13 +5,14 @@ Fork do OperaGX do [HawkRatio](https://github.com/HawkRatio/OperaGXTheme) (antig
 ## Pré-requisitos
 
 - Equicord instalado — https://github.com/Equicord
-- **Internet** — o tema carrega a base do HawkRatio via CDN e a fonte Chakra Petch do Google Fonts. Sem internet, só a camada de overrides aparece.
+- **Internet** — o tema carrega a base do HawkRatio via CDN e os arquivos da fonte dos títulos. Sem internet, só a camada de overrides aparece e os títulos usam fallback nativo.
 
 ## Sincronização v4.1
 
-- v4.5.4.1: fonte com `display=optional` (sem FOUT/reflow), `content-visibility: visible` nas mensagens (sem reserva 72px), `box-sizing: border-box`/`margin: 0` absorvendo bordas e margens do upstream. Documentação técnica em [`docs/THEME_ARCHITECTURE.md`](../docs/THEME_ARCHITECTURE.md).
-- v4.5.4: salto de layout eliminado — o `padding-top:8px` + `margin-top:8px` e o `margin-left:6px`/`border-top` que o upstream injeta em cada linha de canal são zerados por prefixo. `--categorySize: 12px`, corpo com fonte nativa (`gg sans`/`Noto Sans`/Helvetica/Arial) e Chakra Petch mantida só nos títulos. `zoom: 1` e resizer com `pointer-events`/`touch-action: none`.
-- v4.5.3: tamanhos nativos do Discord restaurados na barra de servidores — o tema só retira `clip-path`, a máscara de fade e o `--cp-size`, sem forçar tamanho/gap/raio/padding. `zoom: 1` travado em `html`/`body`/`#app-mount` e sem `letter-spacing`/`font-weight` extras: some o "zoom" visual ao ativar o tema. Resizer da sidebar com `pointer-events`, `touch-action: none`, 6px e `cursor: col-resize`.
+- v4.5.4.2: `--font-primary`, `--font-display` e `--cf` devolvidos ao stack nativo do Discord — o upstream os forçava para Chakra Petch com `!important` e isso vazava para componentes comuns mesmo com o `body` nativo. Títulos agora usam "OperaGX Chakra" (`display:optional`), família local que evita as faces `swap` da base: nenhuma face `swap` é carregada e a geometria medida continua idêntica. `zoom` forçado removido. Documentação técnica em [`docs/THEME_ARCHITECTURE.md`](../docs/THEME_ARCHITECTURE.md).
+- v4.5.4.1: fonte com `display=optional` (sem FOUT/reflow), `content-visibility: visible` nas mensagens (sem reserva 72px), `box-sizing: border-box`/`margin: 0` absorvendo bordas e margens do upstream.
+- v4.5.4: salto de layout eliminado — o `padding-top:8px` + `margin-top:8px` e o `margin-left:6px`/`border-top` que o upstream injeta em cada linha de canal são zerados por prefixo. `--categorySize: 12px`, corpo com fonte nativa (`gg sans`/`Noto Sans`/Helvetica/Arial) e Chakra Petch mantida só nos títulos. Resizer com `pointer-events`/`touch-action: none`.
+- v4.5.3: tamanhos nativos do Discord restaurados na barra de servidores — o tema só retira `clip-path`, a máscara de fade e o `--cp-size`, sem forçar tamanho/gap/raio/padding. Sem `letter-spacing`/`font-weight` extras: some o "zoom" visual ao ativar o tema. Resizer da sidebar com `pointer-events`, `touch-action: none`, 6px e `cursor: col-resize`.
 - v4.5: densidade compacta — servidores em 48px com gap 4px usando as classes reais do upstream, chamadas em 32px, `contain-intrinsic-size` de 72px e reduced-motion alinhado. Scanlines continuam suaves e a sidebar continua redimensionável.
 - Base agora importada do CDN oficial `https://hawkratio.github.io/OperaGXTheme/release/main.css` (v1.2), dentro de `@layer base`. O link antigo do L-Ratio devolvia 404.
 - v4.1.2: `--background` não aponta mais para `--opera-gx-bg-1` (o JPEG do upstream) e as scanlines saíram de `#app-mount::before` para `::after`, que o upstream não usa. A interface deixa de ser coberta pelo wallpaper mesmo que o loader ignore `@layer`.
@@ -28,7 +29,7 @@ Fork do OperaGX do [HawkRatio](https://github.com/HawkRatio/OperaGXTheme) (antig
 **Performance**
 - Animar só `transform` / `opacity` / `filter` (GPU); nada de `box-shadow` ou `width` animados.
 - Sem `backdrop-filter`. `will-change` só no hover.
-- `content-visibility: auto` em listas longas (mensagens, canais).
+- `content-visibility: visible` nas mensagens — sem reserva `contain-intrinsic-size` de 72px que causava salto ao rolar. `contain: layout style` só em listas, nunca `paint`.
 
 **Acessibilidade**
 - `@layer` para organizar o cascade — `!important` só na camada `base` para vencer os `0px !important`/upstream e em overlays que precisam sobrescrever.
@@ -36,6 +37,8 @@ Fork do OperaGX do [HawkRatio](https://github.com/HawkRatio/OperaGXTheme) (antig
 
 **UX**
 - Status indicator com ring, account panel redesenhado, popout/modal de perfil estilo GX, raios consistentes em menus/tooltips/scrollbars, replies com accent, mentions pill animada, unread com glow, call ring, toasts com slide. Hover mantém a forma e não empurra layout; sidebar de canais flexível, servidores com imagem completa e chamada com avatares circulares.
+
+Se o layout continuar igual depois de atualizar, confirma o `@version: 4.5.4.2` no CSS carregado e desativa o QuickCSS. Reativa o tema para romper cache; QuickCSS fica fora de camadas e vence qualquer override do fork.
 
 ## Instalação
 
