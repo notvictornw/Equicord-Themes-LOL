@@ -52,20 +52,17 @@ Ou seja: **o tema já entra dentro de um `@import`**. Isso vem do loader: `Equic
 Regras MDN aplicáveis (confirmadas em `https://developer.mozilla.org/en-US/docs/Web/CSS/@import`):
 
 - `@import` deve vir antes de todas as regras, exceto `@charset` e `@layer statement`;
-- `@import url(...) layer(base)` coloca o stylesheet importado dentro da camada `base`;
 - as declarações importadas cascateiam **como se estivessem escritas no ponto do import**.
 
 Por isso o topo do arquivo é, nesta ordem:
 
 ```css
-@layer base, opengx, overrides, states, a11y;
-
-@import url(https://hawkratio.github.io/OperaGXTheme/release/main.css) layer(base);
+@import url(https://hawkratio.github.io/OperaGXTheme/release/main.css);
 
 @font-face { font-family: "OperaGX Chakra"; /* ... */ font-display: optional; }
 ```
 
-> **Erro histórico:** a base já foi importada sem `layer(base)`. CSS fora de camada sempre vence qualquer `@layer`. Isso fazia os overrides do fork perderem e o wallpaper base64 do upstream cobrir o app. Corrigido em v4.1.1.
+> **Erro histórico:** a base já foi importada com `layer(base)`. CSS normal unlayered do Discord vence CSS normal em camada; só `!important` em camada tem prioridade sobre unlayered. Isso fazia as correções do fork aplicarem só parcialmente no toggle e era uma das fontes do "zoom/salto". Em v4.5.6 as camadas foram removidas: base e fork são unlayered, e a folha do tema vem depois do import.
 
 A documentação oficial do BetterDiscord (`https://docs.betterdiscord.app/themes/`) confirma o contrato e complementa o loader do Equicord:
 
@@ -75,29 +72,27 @@ A documentação oficial do BetterDiscord (`https://docs.betterdiscord.app/theme
 - `prefers-reduced-motion` deve ficar perto da regra original, e cores muito saturadas devem respeitar `--saturation-factor`, `--contrast` e `--brightness` do Discord;
 - `var()` inválido derruba a declaração inteira, então tokens configuráveis precisam de fallback ou dupla declaração quando usados em propriedades críticas.
 
-Por isso o fork evita `!important` fora da camada `base`, usa `#app-mount` como ancestral nas regras de maior frequência e mantém o wrapper `.theme.css` separado do CSS de implementação.
+Por isso o fork usa `#app-mount` como ancestral nas regras de maior frequência, reserva `!important` para onde o upstream também usa e mantém o wrapper `.theme.css` separado do CSS de implementação. Manter tudo em um único arquivo é exigência dos dois loaders; dividir em vários arquivos só adicionaria `@import`s e latência.
 
 ---
 
-## 4. Sistema de camadas
+## 4. Cascata e seções do arquivo
 
-```css
-@layer base, opengx, overrides, states, a11y;
-```
+Não há `@layer`. A base entra por `@import` e todo o CSS do fork vem depois, na mesma folha unlayered. Isso é o que outros temas fazem e o que evita a aplicação parcial que causava salto no toggle.
 
-A ordem é de menor para maior prioridade. Regra geral: **o que corrige o upstream vai em `base`**; o que é identidade do fork vai nas camadas seguintes.
+A organização é apenas visual, por comentários:
 
-| Camada | Conteúdo | Exemplo |
+| Seção | Conteúdo | Exemplo |
 | --- | --- | --- |
-| `base` | Neutralização do upstream: raios forçados a `0px !important`, `clip-path`, margens, máscaras, variáveis de fonte globais e `box-sizing`. | `--radius-md: 12px !important` em `.theme-dark`; `--font-primary` nativo; `margin-top:0` em linhas de canal. |
-| `opengx` | Tokens e elementos próprios do fork. | scanline, glow, keyframes, variáveis de cor. |
-| `overrides` | Visual do fork sobre componentes reais. | botões, avatares, popout, menus, mensagens, HUD. |
-| `states` | Otimizações e estado de scroll. | `contain: layout style` em listas; `content-visibility: visible` em mensagens. |
-| `a11y` | `prefers-reduced-motion`, `prefers-contrast: more`, foco. | desliga scanlines e animações. |
+| `BASE OVERRIDES` | Neutralização do upstream logo após o import. | `--radius-md: 12px !important`, `--font-primary` nativo, `margin-top:0` em linhas agrupadas. |
+| Tokens `:root` | Paleta, raios, transições e variáveis configuráveis. | `--accent-color-1: 250,30,70`, `--customFont: "OperaGX Chakra"`. |
+| `SECTION overrides` | Visual do fork sobre componentes reais. | botões de chamada, tiles, popout, menus, mensagens, HUD. |
+| `SECTION states` | Otimizações e estado de scroll. | `contain: layout style` em listas; `content-visibility: visible` em mensagens. |
+| `SECTION a11y` | `prefers-reduced-motion`, `prefers-contrast: more`, foco. | desliga scanlines e animações. |
 
 ### Regra de ouro para `!important`
 
-Só use `!important` na camada `base`, e somente para empatar uma declaração `!important` do upstream **na mesma camada**. Um `!important` em camada posterior **não vence** um `!important` em camada anterior. É por isso que os raios foram restaurados dentro de `@layer base`, e não em `overrides`.
+Use `!important` só para empatar/vencer uma declaração `!important` do upstream com especificidade igual ou superior. Como tudo é unlayered, a decisão é: `!important` > especificidade > ordem. Raio de chamada e `margin-top` zerado usam `#app-mount` + prefixos para vencer as regras diretas do upstream sem travar largura/altura.
 
 ---
 
@@ -184,8 +179,8 @@ Se precisar adicionar um seletor novo, confirme o nome no DOM real do Discord an
 
 | Upstream | Sintoma | Neutralização no fork |
 | --- | --- | --- |
-| `--radius-*: 0px !important` em `.theme-dark/.theme-light` | tudo quadrado | redeclaração em `@layer base` com `!important` e mesma especificidade |
-| `border-radius:0 !important` em popout/menu/tooltip | cantos mortos | `border-radius:12px !important` em `base` |
+| `--radius-*: 0px !important` em `.theme-dark/.theme-light` | tudo quadrado | redeclaração depois do import com `!important` e mesma especificidade |
+| `border-radius:0 !important` em popout/menu/tooltip | cantos mortos | `border-radius:12px !important` no bloco de overrides |
 | `clip-path: polygon(var(--cp-size)...)` em botões/cards | cantos cortados | `clip-path:none !important` + `--cp-size:0px` |
 | `.tree_5dqHTG` com `mask-size:100% 16px` | ícones de servidor com fade em cima/baixo | `mask:none`/`mask-image:none`/`mask-size:auto` |
 | `.card_e90879 { margin:1px }` | ícone 72px vira 70px | `margin:0` no card/loaded |
@@ -198,7 +193,9 @@ Se precisar adicionar um seletor novo, confirme o nome no DOM real do Discord an
 | `overflow:hidden` em menu/submenu | submenu inalcançável | `overflow:visible !important` |
 | `border-radius:0 !important` em scrollbar | barra quadrada | raio `999px` em `base` |
 | highlight de mensagem com `rgb(var(--accent), 0.2)` fora do balão | seleção "vazada" | neutralize tint e pinte o `[class*="messageContent_"]` internamente |
-| `.avatar_* { width/height:32px !important }` em call | avatar quadrado/pequeno | `border-radius:50%`, `overflow:hidden`, `clip-path:none` |
+| `#app-mount .actionButtons_9U6LUN .lookFilled.colorBrand { border-radius:2px; clip-path:polygon(...); --cp-size:6px; font-weight:1000!important }` | controles de chamada quadrados/cortados e texto pesado | `#app-mount [class*="actionButtons_"] [class*="button_"]` e `#app-mount [class*="lookFilled_"][class*="colorBrand_"]` com raio, `clip-path:none`, `--cp-size:0` e `font-weight:600` |
+| `.tileFrameGrid_*` com `border-radius:var(--radius-xs)` e avatares sem raio | tiles/participantes quadrados | `#app-mount [class*="tileFrameGrid_"]` com raio e `[class*="participantAvatar_"]` com `border-radius:50%` |
+| `.wrapper_oITdBA[style*=margin-top] { margin-top:calc(1rem - 1px)!important }` | mensagens agrupadas descem ~15px ao ativar | `#app-mount [class*="wrapper_"][style*="margin-top"] { margin-top:0!important; border-top:0!important }` |
 
 ---
 
@@ -210,7 +207,7 @@ Decisões tomadas para evitar CLS (Cumulative Layout Shift) e jank:
 - **Sem `content-visibility:auto` em mensagens.** O valor reservado era `contain-intrinsic-size: auto 72px` — sintaxe de **um valor**, aplicada aos dois eixos. Mensagens fora da tela reservavam 72×72px e causavam salto ao rolar. Agora `content-visibility:visible`.
 - **`contain: layout style` restrito** a `[class*="members_"]` e `[class*="scroller_"]`. Nunca `paint`: ele corta popout/tooltip.
 - **`box-sizing:border-box`** em nav e sidebar para absorver bordas de 1–2px do upstream sem mudar largura.
-- **QuickCSS do usuário fica fora de camadas** e, por isso, vence qualquer `@layer` do tema. Se o layout "parecer zoom" só com o tema ligado, desative QuickCSS primeiro; a FAQ oficial do Equicord recomenda exatamente isso antes de culpar o tema.
+- **QuickCSS do usuário é aplicado depois do tema** e pode sobrepor qualquer correção. Se o layout "parecer zoom" só com o tema ligado, desative QuickCSS primeiro; a FAQ oficial do Equicord recomenda exatamente isso antes de culpar o tema.
 - **Scanlines**: `z-index:1`, `pointer-events:none`, `mix-blend-mode:normal`, opacidade ~0.024 e máscara com fade de 80px no topo/base. Nunca use `z-index:9999`: isso cobria modais e composer.
 - **Animações** só com `transform`/`opacity`/`filter`. `@keyframes gx-glitch` foi removido porque dependia de `data-text` que o Discord não fornece.
 
@@ -232,7 +229,7 @@ Decisões tomadas para evitar CLS (Cumulative Layout Shift) e jank:
 2. Use classes com **sufixos diferentes dos reais** para provar resiliência a hash; para o chat, os sufixos atuais observados são `.content_z_gUBg`, `.messageListItem_SY_P2T` e `.messageContent_2i8Bfm`. `.content_4TfzT5` é o divisor de "novo dia" (`width:20%`), não o container do chat.
 3. Abra a página no navegador.
 4. Meça `getBoundingClientRect()` e `getComputedStyle()` **antes e depois** de injetar o import.
-5. Compare: altura da linha de mensagem, posição do composer, largura da sidebar/barra, `contentVisibility` (`visible`) e `containIntrinsicSize` (`none`). Confira também `--font-primary`/`--cf` (stack nativa), `--customFont` (`"OperaGX Chakra"`), `fontFamily` de título/corpo, `fontWeight` de `.messageContent_*` (`400`) e `document.fonts`: `0` faces com `display:"swap"` e `status:"loaded"`. Em `[class*="card_"]`/`[class*="guildIcon"]`, confirme que `borderRadius`, `margin`, `padding` e `objectFit` **não são declarados pelo fork** — só `clipPath: none` e `--cp-size: 0px` devem vir dele.
+5. Compare: altura da linha de mensagem, posição do composer, largura da sidebar/barra, `contentVisibility` (`visible`) e `containIntrinsicSize` (`none`). Confira também `--font-primary`/`--cf` (stack nativa), `--customFont` (`"OperaGX Chakra"`), `fontFamily` de título/corpo, `fontWeight` de `.messageContent_*` (`400`) e `document.fonts`: `0` faces com `display:"swap"` e `status:"loaded"`. Em `[class*="card_"]`/`[class*="guildIcon"]`, confirme que `borderRadius`, `margin`, `padding` e `objectFit` **não são declarados pelo fork** — só `clipPath: none` e `--cp-size: 0px` devem vir dele. Em call, confira `--cp-size:0px`, `clipPath:none`, `fontWeight:600` e raio em `[class*="lookFilled_"][class*="colorBrand_"]`, além de `marginTop:0px` em `[class*="wrapper_"][style*="margin-top"]`.
 6. Confira o console do navegador em nível de erro.
 7. Apague a página temporária e feche a aba antes de commitar.
 8. Rode `git diff --check` e contagem de chaves (`{` vs `}`).
@@ -243,6 +240,8 @@ Verificação v4.5.4.2: harness com o import do tema em `<style id="vencord-them
 
 Verificação v4.5.5: com o mesmo harness, o card e o ícone de servidor tinham `borderRadius: 12px`, `margin: 0px` e `padding: 0px` **injetados pelo fork**. Depois da remoção das regras, `clipPath` continua `none` e `--cp-size` continua `0px`, mas `borderRadius`/`margin`/`padding`/`objectFit` não recebem mais valor do tema — no harness (sem CSS do Discord) aparecem os defaults do navegador, e em produção quem decide é o CSS nativo do Discord. `--font-primary` segue na stack nativa, `--customFont` em `"OperaGX Chakra"` e `fontWeight` da mensagem em `400`.
 
+Verificação v4.5.6: harness com as classes reais do Discord (`actionButtons_9U6LUN`, `button_9U6LUN`, `lookFilled_9OQtot`, `colorBrand_9OQtot`, `tileFrameGrid_wDp5Lr`, `participantAvatar_fWPGCD`, `wrapper_oITdBA[style*=margin-top]`), comparando `HEAD` (v4.5.5, base em `@layer base`) com a versão sem layers. Antes: `--cp-size:6px`, `fontWeight:1000`, tile com `borderRadius:0px`, avatar com `borderRadius:0px` e wrapper com `marginTop:15px`. Depois: `--cp-size:0px`, `clipPath:none`, `fontWeight:600`, tile com `borderRadius:12px`, avatar com `50%` e wrapper com `marginTop:0px`/`borderTop:0px`. Título (`y=85.4375`, `h=42`) e mensagem (`y=148.875`, `h=18`) mantiveram geometria idêntica; o botão deixou de ser deslocado pelo `margin-top` do wrapper (`y=215.875` → `200.875`) e pela fonte 1000 (`h=25px` → `21px`). Console: 0 erros e 0 warnings. Chaves balanceadas (169/169) e `git diff --check` limpo.
+
 ---
 
 ## 12. Como estender com segurança
@@ -250,14 +249,14 @@ Verificação v4.5.5: com o mesmo harness, o card e o ícone de servidor tinham 
 ### Faça
 
 - Adicione novas opções como `@var range ... _s` no header e use `--nome_v` no CSS.
-- Coloque correção de upstream em `@layer base`.
-- Coloque identidade visual em `opengx`/`overrides`.
+- Coloque correção de upstream no bloco `BASE OVERRIDES`, depois do import.
+- Coloque identidade visual nas seções `overrides`/`opengx` (são comentários, não camadas).
 - Documente qualquer `!important` novo com comentário dizendo qual regra do upstream ele vence.
 - Teste com sufixo de classe diferente.
 
 ### Não faça
 
-- Não importe a base fora de `@layer base`.
+- Não reintroduza `@layer`: ele faz o CSS normal do Discord vencer as correções do fork no toggle.
 - Não force `width`/`height` em ícone de servidor, nem `object-fit`.
 - Não use `contain: paint` em container que tenha popout.
 - Não use `z-index` alto na scanline.
@@ -286,7 +285,7 @@ Ideias ordenadas por valor, sem obrigatoriedade:
 2. **Métricas de fallback da "OperaGX Chakra"** — `@font-face` com `size-adjust`, `ascent-override`, `descent-override` e `line-gap-override` permitiria `display:swap` sem CLS e exibir Chakra já na primeira visita; hoje `optional` prefere estabilidade e usa fallback até a fonte estar em cache.
 3. **Sincronização upstream automatizada** — script que baixa `main.css`, faz diff e avisa quando surgir `!important` novo.
 4. **Opção para ligar/desligar glow, scanline e highlight** — hoje só intensidade; um `@var boolean` por efeito daria controle fino.
-5. **Polimento da call UI** — upstream quase não estiliza chamadas; há espaço para participantes em grid, falante ativo com ring e botões com estado de mute/vídeo.
+5. **Polimento da call UI** — com raios e avatares corrigidos, falta estilizar falante ativo com ring e estados de mute/vídeo sem mexer nas dimensões nativas.
 6. **Limpeza de seletores mortos** — 99 de 158 tokens `[class*=]` não aparecem no `main.css`. Muitos são reais no Discord, mas uma auditoria com DOM dump permitiria remover os realmente inexistentes.
 7. **Aviso de versão no tema** — `@invite` e `@updateUrl` já existem; um badge no README com última sincronização ajudaria usuários a saberem se estão com cache antigo.
 8. **Tradução dos READMEs** — hoje tudo em português. Uma versão em inglês ampliaria o uso do fork.
@@ -297,9 +296,9 @@ Ideias ordenadas por valor, sem obrigatoriedade:
 
 | Versão | Mudança |
 | --- | --- |
-| 4.0 | Reescrita completa: layers, tokens, scanlines, glow, HUD. |
+| 4.0 | Reescrita completa: seções, tokens, scanlines, glow, HUD. |
 | 4.1 | Base sincronizada com HawkRatio v1.2, CDN trocado de L-Ratio (404) para HawkRatio. |
-| 4.1.1 | Import para `layer(base)`; overrides voltam a vencer. |
+| 4.1.1 | Import passou a controlar a precedência da base sobre os overrides. |
 | 4.1.2 | Wallpaper base64 neutralizado; scanlines em `::after`. |
 | 4.2 | FolderColumns nativo removido. |
 | 4.3 | Raios/bordas restaurados, clip/contain corrigidos, contraste e hovers. |
@@ -313,6 +312,7 @@ Ideias ordenadas por valor, sem obrigatoriedade:
 | 4.5.4.2 | Variáveis de fonte globais neutralizadas, família de título própria (`"OperaGX Chakra"`) sem faces `swap`, densidade nativa preservada e `zoom` forçado removido. |
 | 4.5.4.3 | Peso 400 no texto das mensagens e `text-shadow` removido do `<strong>`, seguindo o padrão do tema Ultra (BetterDiscord). |
 | 4.5.5 | Nenhuma geometria de ícone de servidor forçada pelo fork; entry `OperaGX.theme.css` no formato documentado do BetterDiscord. |
+| 4.5.6 | Camadas removidas (cascata unlayered); controles/tiles/avatares de chamada arredondados e `margin-top` do upstream zerado em mensagens agrupadas. |
 
 ---
 
